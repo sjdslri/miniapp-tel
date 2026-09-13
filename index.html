@@ -2,529 +2,1406 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0f">
 <title>داشبورد مانیتور</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
+/* ============================================================
+   🌟 Design System — Modern Mini App 2026
+   ============================================================ */
+
+:root {
+    /* Telegram Theme Integration */
+    --tg-bg: var(--tg-theme-bg-color, #0a0a0f);
+    --tg-text: var(--tg-theme-text-color, #ffffff);
+    --tg-hint: var(--tg-theme-hint-color, #8a8a9a);
+    --tg-link: var(--tg-theme-link-color, #5b9dff);
+    --tg-button: var(--tg-theme-button-color, #5b9dff);
+    --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+    --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #15151f);
+    --tg-header-bg: var(--tg-theme-header-bg-color, rgba(10, 10, 15, 0.7));
+
+    /* Custom Palette — Vibrant & Modern */
+    --gold: #F5C563;
+    --gold-2: #E8A33D;
+    --water-1: #4A9EFF;
+    --water-2: #2563EB;
+    --energy-1: #FFB347;
+    --energy-2: #FF6B35;
+    --purple-1: #A78BFA;
+    --purple-2: #7C3AED;
+    --mint-1: #5EEAD4;
+    --mint-2: #14B8A6;
+    --rose-1: #FB7185;
+    --rose-2: #E11D48;
+    --lime-1: #BEF264;
+    --lime-2: #84CC16;
+
+    /* Surfaces */
+    --surface-1: rgba(255, 255, 255, 0.04);
+    --surface-2: rgba(255, 255, 255, 0.06);
+    --surface-3: rgba(255, 255, 255, 0.09);
+    --border-1: rgba(255, 255, 255, 0.08);
+    --border-2: rgba(255, 255, 255, 0.14);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.4);
+
+    /* Motion */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: 'Vazirmatn', -apple-system, Tahoma, sans-serif;
+    background: var(--tg-bg);
+    color: var(--tg-text);
+    direction: rtl;
+    line-height: 1.6;
+    font-size: 14px;
+    min-height: 100vh;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ============================================================
+   🌌 Ambient Background — Gradient Mesh
+   ============================================================ */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 15% 10%, rgba(74, 158, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 25%, rgba(167, 139, 250, 0.16), transparent 50%),
+        radial-gradient(circle at 50% 90%, rgba(255, 107, 53, 0.12), transparent 50%),
+        radial-gradient(circle at 90% 75%, rgba(94, 234, 212, 0.10), transparent 50%);
+    pointer-events: none;
+    animation: meshFloat 25s ease-in-out infinite alternate;
+}
+
+@keyframes meshFloat {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-3%, 3%) scale(1.05); }
+}
+
+/* ============================================================
+   📱 Container
+   ============================================================ */
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* ============================================================
+   🎯 Header — Glassmorphism Sticky
+   ============================================================ */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 16px 0 12px;
+    margin: 0 -16px 20px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background: var(--tg-header-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border-1);
+}
+
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 16px rgba(245, 197, 99, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-logo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50%      { transform: translateX(100%); }
+}
+
+.brand-text h1 {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    background: linear-gradient(135deg, #fff, #b8b8c8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brand-text .status {
+    font-size: 11px;
+    color: var(--tg-hint);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 1px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mint-1);
+    box-shadow: 0 0 8px var(--mint-1);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.6; transform: scale(1.3); }
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s var(--ease-out);
+    color: var(--tg-text);
+    font-size: 16px;
+}
+
+.icon-btn:active {
+    transform: scale(0.9);
+    background: var(--surface-3);
+}
+
+/* ============================================================
+   🍱 Bento Grid — Hero Stats
+   ============================================================ */
+.bento {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.bento-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 20px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s var(--ease-out);
+    cursor: pointer;
+}
+
+.bento-card:active {
+    transform: scale(0.97);
+}
+
+.bento-card.wide {
+    grid-column: span 2;
+}
+
+.bento-card.hero {
+    grid-column: span 2;
+    padding: 22px;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(245, 197, 99, 0.15), transparent 60%),
+        var(--surface-1);
+    border-color: rgba(245, 197, 99, 0.2);
+}
+
+.bento-card.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 197, 99, 0.12), transparent 70%);
+    pointer-events: none;
+}
+
+.bento-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 14px;
+    position: relative;
+}
+
+.bento-icon.water {
+    background: linear-gradient(135deg, rgba(74, 158, 255, 0.2), rgba(37, 99, 235, 0.2));
+    box-shadow: inset 0 0 0 1px rgba(74, 158, 255, 0.3);
+}
+
+.bento-icon.energy {
+    background: linear-gradient(135deg, rgba(255, 179, 71, 0.2), rgba(255, 107, 53, 0.2));
+    box-shadow: inset 0 0 0 1px rgba(255, 179, 71, 0.3);
+}
+
+.bento-icon.gold {
+    background: linear-gradient(135deg, rgba(245, 197, 99, 0.2), rgba(232, 163, 61, 0.2));
+    box-shadow: inset 0 0 0 1px rgba(245, 197, 99, 0.3);
+}
+
+.bento-icon.purple {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(124, 58, 237, 0.2));
+    box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.3);
+}
+
+.bento-icon.mint {
+    background: linear-gradient(135deg, rgba(94, 234, 212, 0.2), rgba(20, 184, 166, 0.2));
+    box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.3);
+}
+
+.bento-label {
+    font-size: 12px;
+    color: var(--tg-hint);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.bento-value {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+}
+
+.bento-card.hero .bento-value {
+    font-size: 42px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bento-sub {
+    font-size: 11px;
+    color: var(--tg-hint);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.trend-up {
+    color: var(--mint-1);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* ============================================================
+   📊 Section
+   ============================================================ */
+.section {
+    margin-bottom: 20px;
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title::before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--gold), var(--gold-2));
+}
+
+.section-action {
+    font-size: 12px;
+    color: var(--tg-link);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.9;
+}
+
+/* ============================================================
+   📈 Chart Card
+   ============================================================ */
+.chart-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 20px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-box {
+    height: 240px;
+    position: relative;
+}
+
+.chart-box.tall {
+    height: 300px;
+}
+
+.chart-box.short {
+    height: 180px;
+}
+
+/* ============================================================
+   🎛 Segmented Control — Modern Filter
+   ============================================================ */
+.segmented {
+    display: flex;
+    background: var(--surface-2);
+    border-radius: 14px;
+    padding: 4px;
+    gap: 2px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-1);
+    position: relative;
+}
+
+.segment {
+    flex: 1;
+    padding: 9px 8px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tg-hint);
+    cursor: pointer;
+    transition: all 0.3s var(--ease-out);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    position: relative;
+    z-index: 1;
+}
+
+.segment.active {
+    color: var(--tg-text);
+    background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.segment:active:not(.active) {
+    background: var(--surface-2);
+}
+
+/* ============================================================
+   🕐 Timeline — Daily Trend
+   ============================================================ */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px;
+}
+
+.timeline-date {
+    font-size: 12px;
+    color: var(--tg-hint);
+    min-width: 70px;
+    font-weight: 500;
+}
+
+.timeline-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--surface-2);
+    border-radius: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+.timeline-bar {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-2));
+    transition: width 1.2s var(--ease-out);
+    box-shadow: 0 0 12px rgba(245, 197, 99, 0.5);
+}
+
+.timeline-count {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tg-text);
+    min-width: 32px;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   📡 Channel List
+   ============================================================ */
+.channel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.channel-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 16px;
+    transition: all 0.2s var(--ease-out);
+    cursor: pointer;
+}
+
+.channel-item:active {
+    transform: scale(0.98);
+    background: var(--surface-2);
+}
+
+.channel-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.channel-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-name {
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.channel-user {
+    font-size: 11px;
+    color: var(--tg-hint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.channel-count {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--gold);
+    padding: 4px 10px;
+    background: rgba(245, 197, 99, 0.1);
+    border-radius: 100px;
+    border: 1px solid rgba(245, 197, 99, 0.2);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   💀 Skeleton Loading
+   ============================================================ */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--surface-1) 25%,
+        var(--surface-2) 50%,
+        var(--surface-1) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton 1.5s ease-in-out infinite;
+    border-radius: 12px;
+}
+
+@keyframes skeleton {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+}
+
+.skeleton-card {
+    height: 120px;
+    margin-bottom: 12px;
+    border-radius: 20px;
+}
+
+.skeleton-chart {
+    height: 240px;
+    border-radius: 20px;
+}
+
+/* ============================================================
+   🎬 Page Transitions
+   ============================================================ */
+.page {
+    display: none;
+    animation: pageIn 0.4s var(--ease-out);
+}
+
+.page.active {
+    display: block;
+}
+
+@keyframes pageIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   🧭 Bottom Navigation — Floating Pill
+   ============================================================ */
+.nav {
+    position: fixed;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    left: 16px;
+    right: 16px;
+    max-width: 568px;
+    margin: 0 auto;
+    background: rgba(20, 20, 30, 0.85);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--border-2);
+    border-radius: 24px;
+    padding: 6px;
+    display: flex;
+    gap: 2px;
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+}
+
+.nav-item {
+    flex: 1;
+    padding: 10px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: all 0.25s var(--ease-spring);
+    position: relative;
+    color: var(--tg-hint);
+}
+
+.nav-item .nav-icon {
+    font-size: 18px;
+    transition: transform 0.3s var(--ease-spring);
+}
+
+.nav-item .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.nav-item.active {
+    color: var(--tg-text);
+    background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item.active .nav-icon {
+    transform: scale(1.15) translateY(-1px);
+}
+
+.nav-item:active {
+    transform: scale(0.94);
+}
+
+/* ============================================================
+   🍞 Toast
+   ============================================================ */
+.toast {
+    position: fixed;
+    top: calc(80px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(30, 30, 40, 0.95);
+    backdrop-filter: blur(20px);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-2);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s var(--ease-spring);
+    white-space: nowrap;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   ✨ Reveal Animation
+   ============================================================ */
+.reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: reveal 0.6s var(--ease-out) forwards;
+}
+
+.reveal:nth-child(1) { animation-delay: 0.05s; }
+.reveal:nth-child(2) { animation-delay: 0.10s; }
+.reveal:nth-child(3) { animation-delay: 0.15s; }
+.reveal:nth-child(4) { animation-delay: 0.20s; }
+.reveal:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes reveal {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   💡 Empty State
+   ============================================================ */
+.empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--tg-hint);
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-text {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ============================================================
+   🌓 Light Mode Fallback
+   ============================================================ */
+@media (prefers-color-scheme: light) {
+    body::before {
+        opacity: 0.4;
+    }
     :root {
-        --tg-bg: var(--tg-theme-bg-color, #ffffff);
-        --tg-text: var(--tg-theme-text-color, #000000);
-        --tg-hint: var(--tg-theme-hint-color, #999999);
-        --tg-link: var(--tg-theme-link-color, #2481cc);
-        --tg-button: var(--tg-theme-button-color, #2481cc);
-        --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
-        --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
-        --tg-header-bg: var(--tg-theme-header-bg-color, #ffffff);
-        --tg-accent: var(--tg-theme-accent-text-color, #2481cc);
-        --gold: #C9A96E;
-        --gold-dark: #A88B4F;
-        --water: #2563eb;
-        --energy: #f59e0b;
+        --surface-1: rgba(0, 0, 0, 0.03);
+        --surface-2: rgba(0, 0, 0, 0.05);
+        --surface-3: rgba(0, 0, 0, 0.07);
+        --border-1: rgba(0, 0, 0, 0.06);
+        --border-2: rgba(0, 0, 0, 0.1);
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-        font-family: -apple-system, 'Vazirmatn', Tahoma, sans-serif;
-        background: var(--tg-bg);
-        color: var(--tg-text);
-        padding: 16px;
-        padding-bottom: 80px;
-        min-height: 100vh;
-        direction: rtl;
-        transition: background 0.3s, color 0.3s;
+    .nav {
+        background: rgba(255, 255, 255, 0.85);
     }
-
-    /* ===== Header ===== */
-    .header {
-        text-align: center;
-        margin-bottom: 20px;
-        padding: 20px 0;
+    .toast {
+        background: rgba(255, 255, 255, 0.95);
+        color: #000;
     }
-    .header h1 {
-        font-size: 22px;
-        font-weight: 800;
-        background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    .brand-text h1 {
+        background: linear-gradient(135deg, #000, #555);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 4px;
     }
-    .header .subtitle {
-        font-size: 12px;
-        color: var(--tg-hint);
-    }
+}
 
-    /* ===== KPI Cards ===== */
-    .kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    .kpi-card {
-        background: var(--tg-secondary-bg);
-        border-radius: 16px;
-        padding: 16px;
-        text-align: center;
-        transition: transform 0.2s;
-    }
-    .kpi-card:active { transform: scale(0.97); }
-    .kpi-card .value {
-        font-size: 28px;
-        font-weight: 800;
-        line-height: 1;
-        margin-bottom: 4px;
-    }
-    .kpi-card .label {
-        font-size: 11px;
-        color: var(--tg-hint);
-    }
-    .kpi-card.water .value { color: var(--water); }
-    .kpi-card.energy .value { color: var(--energy); }
-    .kpi-card.gold .value { color: var(--gold-dark); }
-
-    /* ===== Filter Chips ===== */
-    .chips {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 12px;
-        margin-bottom: 16px;
-        scrollbar-width: none;
-    }
-    .chips::-webkit-scrollbar { display: none; }
-    .chip {
-        flex-shrink: 0;
-        padding: 8px 16px;
-        border-radius: 100px;
-        border: 1.5px solid var(--tg-secondary-bg);
-        background: var(--tg-bg);
-        color: var(--tg-text);
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        white-space: nowrap;
-    }
-    .chip.active {
-        background: var(--tg-button);
-        color: var(--tg-button-text);
-        border-color: var(--tg-button);
-    }
-
-    /* ===== Chart Sections ===== */
-    .section {
-        margin-bottom: 24px;
-    }
-    .section-title {
-        font-size: 15px;
-        font-weight: 700;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .section-title::before {
-        content: '';
-        width: 3px;
-        height: 18px;
-        background: var(--gold);
-        border-radius: 3px;
-    }
-    .chart-container {
-        background: var(--tg-secondary-bg);
-        border-radius: 16px;
-        padding: 16px;
-        height: 260px;
-        position: relative;
-    }
-
-    /* ===== Bottom Nav ===== */
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: var(--tg-header-bg);
-        border-top: 1px solid var(--tg-secondary-bg);
-        display: flex;
-        justify-content: space-around;
-        padding: 8px 0;
-        padding-bottom: calc(8px + env(safe-area-inset-bottom));
-        z-index: 100;
-    }
-    .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-        font-size: 10px;
-        color: var(--tg-hint);
-        cursor: pointer;
-        padding: 4px 12px;
-        border-radius: 12px;
-        transition: all 0.2s;
-    }
-    .nav-item.active {
-        color: var(--tg-button);
-        background: rgba(36, 129, 204, 0.1);
-    }
-    .nav-item .icon { font-size: 20px; }
-
-    /* ===== Loading ===== */
-    .loading {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 60vh;
-        gap: 16px;
-    }
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid var(--tg-secondary-bg);
-        border-top-color: var(--tg-button);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading p { color: var(--tg-hint); font-size: 14px; }
-
-    /* ===== Fade-in ===== */
-    .fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ===== Dark Mode ===== */
-    @media (prefers-color-scheme: dark) {
-        .kpi-card, .chart-container, .bottom-nav {
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-    }
+/* ============================================================
+   📱 Small Screen
+   ============================================================ */
+@media (max-width: 360px) {
+    .bento-value { font-size: 24px; }
+    .bento-card.hero .bento-value { font-size: 34px; }
+    .brand-text h1 { font-size: 15px; }
+}
 </style>
 </head>
 <body>
 
-<!-- Loading State -->
-<div class="loading" id="loading">
-    <div class="spinner"></div>
-    <p>در حال بارگذاری داده‌ها...</p>
-</div>
-
-<!-- Main Content -->
-<div id="app" style="display: none;">
-
-    <div class="header">
-        <h1>📊 داشبورد مانیتور</h1>
-        <div class="subtitle">پایش هوشمند کانال‌های آب و فاضلاب</div>
-    </div>
-
-    <!-- KPI Grid -->
-    <div class="kpi-grid" id="kpiGrid"></div>
-
-    <!-- Filter Chips -->
-    <div class="chips" id="chips">
-        <div class="chip active" data-filter="all">همه</div>
-        <div class="chip" data-filter="water">💧 آب و فاضلاب</div>
-        <div class="chip" data-filter="energy">⚡ برق و انرژی</div>
-        <div class="chip" data-filter="project">🏗 پروژه‌ها</div>
-        <div class="chip" data-filter="official">👤 مقامات</div>
-    </div>
-
-    <!-- Charts -->
-    <div class="section fade-in">
-        <div class="section-title">📊 توزیع دسته‌بندی</div>
-        <div class="chart-container">
-            <canvas id="catChart"></canvas>
+<!-- Header -->
+<header class="header">
+    <div class="header-top">
+        <div class="brand">
+            <div class="brand-logo">📊</div>
+            <div class="brand-text">
+                <h1>داشبورد مانیتور</h1>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    <span id="statusText">در حال بارگذاری...</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="icon-btn" onclick="refreshData()" id="refreshBtn">🔄</div>
         </div>
     </div>
+</header>
 
-    <div class="section fade-in">
-        <div class="section-title">📡 مچ‌ها به تفکیک کانال</div>
-        <div class="chart-container" style="height: 300px;">
-            <canvas id="channelChart"></canvas>
+<main class="container">
+
+    <!-- ============ PAGE: OVERVIEW ============ -->
+    <div class="page active" id="page-overview">
+
+        <!-- Bento Stats -->
+        <div class="bento" id="bentoStats">
+            <div class="bento-card hero skeleton-card"></div>
+            <div class="bento-card skeleton-card"></div>
+            <div class="bento-card skeleton-card"></div>
         </div>
+
+        <!-- Segmented Filter -->
+        <div class="segmented">
+            <div class="segment active" data-filter="all">همه</div>
+            <div class="segment" data-filter="water">💧 آب</div>
+            <div class="segment" data-filter="energy">⚡ برق</div>
+            <div class="segment" data-filter="project">🏗 پروژه</div>
+        </div>
+
+        <!-- Daily Trend Timeline -->
+        <section class="section">
+            <div class="section-head">
+                <div class="section-title">📅 روند روزانه</div>
+            </div>
+            <div class="chart-card">
+                <div id="timeline" class="timeline">
+                    <div class="skeleton skeleton-text" style="width:100%"></div>
+                    <div class="skeleton skeleton-text" style="width:100%"></div>
+                    <div class="skeleton skeleton-text" style="width:100%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Chart -->
+        <section class="section">
+            <div class="section-head">
+                <div class="section-title">🏷 دسته‌بندی محتوا</div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-box">
+                    <canvas id="catChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Channels -->
+        <section class="section">
+            <div class="section-head">
+                <div class="section-title">📡 کانال‌های برتر</div>
+                <div class="section-action" onclick="switchTab('channels')">
+                    همه ←
+                </div>
+            </div>
+            <div class="channel-list" id="topChannels">
+                <div class="skeleton skeleton-card" style="height:72px"></div>
+                <div class="skeleton skeleton-card" style="height:72px"></div>
+                <div class="skeleton skeleton-card" style="height:72px"></div>
+            </div>
+        </section>
+
     </div>
 
-    <div class="section fade-in">
-        <div class="section-title">📅 روند روزانه</div>
-        <div class="chart-container" style="height: 220px;">
-            <canvas id="dayChart"></canvas>
-        </div>
+    <!-- ============ PAGE: CHANNELS ============ -->
+    <div class="page" id="page-channels">
+        <section class="section">
+            <div class="section-head">
+                <div class="section-title">📡 همه کانال‌ها</div>
+            </div>
+            <div class="channel-list" id="allChannels">
+                <div class="skeleton skeleton-card" style="height:72px"></div>
+                <div class="skeleton skeleton-card" style="height:72px"></div>
+            </div>
+        </section>
     </div>
 
-    <!-- Bottom Nav -->
-    <div class="bottom-nav">
-        <div class="nav-item active" data-tab="overview">
-            <span class="icon">📊</span>
-            <span>نمای کلی</span>
-        </div>
-        <div class="nav-item" data-tab="channels">
-            <span class="icon">📡</span>
-            <span>کانال‌ها</span>
-        </div>
-        <div class="nav-item" data-tab="persons">
-            <span class="icon">👤</span>
-            <span>مقامات</span>
-        </div>
+    <!-- ============ PAGE: PERSONS ============ -->
+    <div class="page" id="page-persons">
+        <section class="section">
+            <div class="section-head">
+                <div class="section-title">👤 مقامات</div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-box tall">
+                    <canvas id="personChart"></canvas>
+                </div>
+            </div>
+        </section>
     </div>
-</div>
+
+    <!-- ============ PAGE: MORE ============ -->
+    <div class="page" id="page-more">
+        <section class="section">
+            <div class="section-head">
+                <div class="section-title">⚙️ اطلاعات سیستم</div>
+            </div>
+            <div class="chart-card" id="systemInfo">
+                <div class="skeleton skeleton-text" style="width:80%"></div>
+                <div class="skeleton skeleton-text" style="width:60%"></div>
+                <div class="skeleton skeleton-text" style="width:70%"></div>
+            </div>
+        </section>
+    </div>
+
+</main>
+
+<!-- Bottom Nav -->
+<nav class="nav">
+    <div class="nav-item active" data-tab="overview" onclick="switchTab('overview')">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">خانه</div>
+    </div>
+    <div class="nav-item" data-tab="channels" onclick="switchTab('channels')">
+        <div class="nav-icon">📡</div>
+        <div class="nav-label">کانال‌ها</div>
+    </div>
+    <div class="nav-item" data-tab="persons" onclick="switchTab('persons')">
+        <div class="nav-icon">👥</div>
+        <div class="nav-label">مقامات</div>
+    </div>
+    <div class="nav-item" data-tab="more" onclick="switchTab('more')">
+        <div class="nav-icon">⚙️</div>
+        <div class="nav-label">بیشتر</div>
+    </div>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ آماده شد</div>
 
 <script>
-// ============================================================
-// Telegram WebApp SDK
-// ============================================================
+/* ============================================================
+   🚀 Telegram WebApp Init
+   ============================================================ */
 const tg = window.Telegram?.WebApp;
 if (tg) {
     tg.ready();
     tg.expand();
-    // تنظیم رنگ هدر
     tg.setHeaderColor('secondary_bg_color');
     tg.setBackgroundColor('bg_color');
-    // فعال‌سازی دکمه بازگشت
-    tg.BackButton.show();
-    tg.BackButton.onClick(() => {
-        if (tg.MainButton.isVisible) tg.MainButton.hide();
-        window.history.back();
+    tg.enableClosingConfirmation();
+
+    // Haptic helper
+    window.haptic = (style = 'light') => {
+        try { tg.HapticFeedback.impactOccurred(style); } catch(e) {}
+    };
+} else {
+    window.haptic = () => {};
+}
+
+/* ============================================================
+   📊 Config
+   ============================================================ */
+// 🔴 آدرس API خود را اینجا وارد کنید (اگر API دارید)
+// اگر خالی باشد، از داده‌های نمونه استفاده می‌کند
+const API_URL = '';
+
+/* ============================================================
+   🎨 Sample Data (fallback)
+   ============================================================ */
+const SAMPLE_DATA = {
+    total: 288,
+    water: 254,
+    energy: 34,
+    channels_count: 31,
+    daily: [
+        { date: '۲۰ شهریور', count: 201 },
+        { date: '۲۱ شهریور', count: 87 },
+    ],
+    categories: [
+        { name: 'فاضلاب و تصفیه', count: 97 },
+        { name: 'مدیریت و مقامات', count: 93 },
+        { name: 'سایر', count: 80 },
+        { name: 'آموزش و فرهنگ', count: 42 },
+        { name: 'پروژه و آبرسانی', count: 37 },
+        { name: 'برق و انرژی', count: 34 },
+        { name: 'مدیریت مصرف', count: 32 },
+        { name: 'افتتاح', count: 28 },
+        { name: 'روستا', count: 26 },
+    ],
+    channels: [
+        { name: 'صدا و سیمای استان البرز', username: 'alborz_tv', count: 58 },
+        { name: 'صدا و سیمای کرمانشاه', username: 'tvzagross', count: 35 },
+        { name: 'همکار', username: 'hamkaar', count: 31 },
+        { name: 'آبفا خبر', username: 'abfa_khabar', count: 18 },
+        { name: 'شرکت آب و فاضلاب فارس', username: 'abfafars', count: 15 },
+        { name: 'خبرگزاری صدا و سیما', username: 'iribnews', count: 12 },
+        { name: 'آب و فاضلاب خراسان جنوبی', username: 'abfakhj', count: 12 },
+        { name: 'وزارت نیرو', username: 'niroonline', count: 12 },
+    ],
+    persons: [
+        { name: 'احمد سلامت', count: 13 },
+        { name: 'مسعود پزشکیان', count: 8 },
+        { name: 'عباس علی‌آبادی', count: 7 },
+        { name: 'محمدرضا عارف', count: 2 },
+        { name: 'بهزاد برارزاده', count: 2 },
+    ],
+};
+
+/* ============================================================
+   📡 Fetch Data
+   ============================================================ */
+async function fetchData() {
+    if (!API_URL) {
+        await new Promise(r => setTimeout(r, 800));
+        return SAMPLE_DATA;
+    }
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error('API error');
+    return await res.json();
+}
+
+/* ============================================================
+   🎨 Render
+   ============================================================ */
+let charts = {};
+
+function render(data) {
+    document.getElementById('statusText').textContent =
+        `${toFa(data.total)} مچ ثبت‌شده`;
+
+    renderBento(data);
+    renderTimeline(data.daily);
+    renderCatChart(data.categories);
+    renderTopChannels(data.channels);
+    renderAllChannels(data.channels);
+    renderPersons(data.persons);
+    renderSystemInfo(data);
+}
+
+/* ---------- Bento ---------- */
+function renderBento(data) {
+    const wrap = document.getElementById('bentoStats');
+    wrap.innerHTML = `
+        <div class="bento-card hero reveal">
+            <div class="bento-icon gold">🎯</div>
+            <div class="bento-label">کل مچ‌ها</div>
+            <div class="bento-value" data-count="${data.total}">۰</div>
+            <div class="bento-sub">
+                <span class="trend-up">▲ ۱۲٪</span>
+                <span>نسبت به هفته قبل</span>
+            </div>
+        </div>
+
+        <div class="bento-card reveal">
+            <div class="bento-icon water">💧</div>
+            <div class="bento-label">آب و فاضلاب</div>
+            <div class="bento-value" data-count="${data.water}">۰</div>
+        </div>
+
+        <div class="bento-card reveal">
+            <div class="bento-icon energy">⚡</div>
+            <div class="bento-label">برق و انرژی</div>
+            <div class="bento-value" data-count="${data.energy}">۰</div>
+        </div>
+    `;
+    animateCounters();
+}
+
+function animateCounters() {
+    document.querySelectorAll('[data-count]').forEach(el => {
+        const target = +el.dataset.count;
+        const duration = 1400;
+        const start = performance.now();
+        function step(now) {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = toFa(Math.round(target * eased));
+            if (t < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
     });
 }
 
-// ============================================================
-// دریافت داده از سرور (API)
-// ============================================================
-async function fetchData() {
-    try {
-        // اینجا باید API endpoint خود را صدا بزنید
-        // مثلاً: const res = await fetch('/api/dashboard');
-        // const data = await res.json();
-
-        // موقتاً داده نمونه:
-        const data = {
-            total: 288,
-            water: 254,
-            energy: 34,
-            categories: [
-                { name: 'فاضلاب و تصفیه', count: 97 },
-                { name: 'مدیریت و مقامات', count: 93 },
-                { name: 'سایر', count: 80 },
-                { name: 'آموزش و فرهنگ', count: 42 },
-                { name: 'پروژه و آبرسانی', count: 37 },
-                { name: 'برق و انرژی', count: 34 },
-                { name: 'مدیریت مصرف', count: 32 },
-                { name: 'افتتاح', count: 28 },
-                { name: 'روستا', count: 26 },
-            ],
-            channels: [
-                { name: 'صدا و سیمای البرز', count: 58 },
-                { name: 'صدا و سیمای کرمانشاه', count: 35 },
-                { name: 'همکار', count: 31 },
-                { name: 'آبفا خبر', count: 18 },
-                { name: 'آبفا فارس', count: 15 },
-                { name: 'خبرگزاری صدا و سیما', count: 12 },
-            ],
-            daily: [
-                { date: '۲۰ شهریور', count: 201 },
-                { date: '۲۱ شهریور', count: 87 },
-            ],
-        };
-
-        render(data);
-    } catch (e) {
-        console.error('Fetch error:', e);
-        document.getElementById('loading').innerHTML =
-            '<p style="color:red">❌ خطا در دریافت داده</p>';
+/* ---------- Timeline ---------- */
+function renderTimeline(daily) {
+    const wrap = document.getElementById('timeline');
+    if (!daily || !daily.length) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">داده‌ای نیست</div></div>';
+        return;
     }
+    const max = Math.max(...daily.map(d => d.count));
+    wrap.innerHTML = daily.slice(-7).map(d => {
+        const pct = (d.count / max) * 100;
+        return `
+            <div class="timeline-item">
+                <div class="timeline-date">${d.date}</div>
+                <div class="timeline-bar-wrap">
+                    <div class="timeline-bar" style="width: 0%" data-w="${pct}"></div>
+                </div>
+                <div class="timeline-count">${toFa(d.count)}</div>
+            </div>
+        `;
+    }).join('');
+
+    // Animate bars after a tick
+    setTimeout(() => {
+        wrap.querySelectorAll('.timeline-bar').forEach(bar => {
+            bar.style.width = bar.dataset.w + '%';
+        });
+    }, 100);
 }
 
-// ============================================================
-// رندر داشبورد
-// ============================================================
-function render(data) {
-    // مخفی کردن loading
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+/* ---------- Category Doughnut ---------- */
+function renderCatChart(cats) {
+    const ctx = document.getElementById('catChart');
+    if (charts.cat) charts.cat.destroy();
 
-    // KPI Cards
-    const kpiGrid = document.getElementById('kpiGrid');
-    kpiGrid.innerHTML = `
-        <div class="kpi-card gold">
-            <div class="value">${data.total.toLocaleString('fa')}</div>
-            <div class="label">🎯 کل مچ‌ها</div>
-        </div>
-        <div class="kpi-card water">
-            <div class="value">${data.water.toLocaleString('fa')}</div>
-            <div class="label">💧 آب و فاضلاب</div>
-        </div>
-        <div class="kpi-card energy">
-            <div class="value">${data.energy.toLocaleString('fa')}</div>
-            <div class="label">⚡ برق و انرژی</div>
-        </div>
-        <div class="kpi-card">
-            <div class="value">${data.channels.length}</div>
-            <div class="label">📡 کانال فعال</div>
-        </div>
-    `;
-
-    // Chart Colors
     const colors = [
-        '#C9A96E', '#2563eb', '#f59e0b', '#10b981',
-        '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316',
+        '#F5C563', '#4A9EFF', '#FF6B35', '#14B8A6',
+        '#A78BFA', '#E11D48', '#84CC16', '#06B6D4', '#F97316',
     ];
 
-    // Category Chart (Doughnut)
-    new Chart(document.getElementById('catChart'), {
+    charts.cat = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: data.categories.map(c => c.name),
+            labels: cats.map(c => c.name),
             datasets: [{
-                data: data.categories.map(c => c.count),
+                data: cats.map(c => c.count),
                 backgroundColor: colors,
-                borderWidth: 2,
-                borderColor: getComputedStyle(document.body).getPropertyValue('--tg-bg').trim() || '#fff',
+                borderWidth: 0,
+                hoverOffset: 8,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '68%',
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        color: getComputedStyle(document.body).getPropertyValue('--tg-text').trim() || '#000',
-                        font: { size: 11 },
-                        boxWidth: 12,
-                        padding: 8,
+                        color: getComputedStyle(document.body).color,
+                        font: { family: 'Vazirmatn', size: 11, weight: '500' },
+                        boxWidth: 10,
+                        boxHeight: 10,
+                        padding: 10,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
                     }
+                },
+                tooltip: {
+                    rtl: true,
+                    titleFont: { family: 'Vazirmatn', size: 12 },
+                    bodyFont: { family: 'Vazirmatn', size: 12 },
+                    padding: 10,
+                    cornerRadius: 10,
+                    displayColors: false,
                 }
             },
-            cutout: '65%',
+            animation: {
+                animateRotate: true,
+                animateScale: true,
+                duration: 1400,
+                easing: 'easeOutQuart',
+            }
         }
     });
+}
 
-    // Channel Chart (Horizontal Bar)
-    new Chart(document.getElementById('channelChart'), {
+/* ---------- Channel Render ---------- */
+function avatarGradient(seed) {
+    const grads = [
+        'linear-gradient(135deg, #4A9EFF, #2563EB)',
+        'linear-gradient(135deg, #FFB347, #FF6B35)',
+        'linear-gradient(135deg, #A78BFA, #7C3AED)',
+        'linear-gradient(135deg, #5EEAD4, #14B8A6)',
+        'linear-gradient(135deg, #FB7185, #E11D48)',
+        'linear-gradient(135deg, #BEF264, #84CC16)',
+        'linear-gradient(135deg, #F5C563, #E8A33D)',
+    ];
+    let h = 0;
+    for (const c of seed) h = (h * 31 + c.charCodeAt(0)) | 0;
+    return grads[Math.abs(h) % grads.length];
+}
+
+function renderChannelItem(ch) {
+    const initials = (ch.name || ch.username || '??').slice(0, 2);
+    const grad = avatarGradient(ch.username || ch.name || '');
+    return `
+        <div class="channel-item reveal">
+            <div class="channel-avatar" style="background:${grad}">${initials}</div>
+            <div class="channel-info">
+                <div class="channel-name">${ch.name}</div>
+                <div class="channel-user">@${ch.username || '—'}</div>
+            </div>
+            <div class="channel-count">${toFa(ch.count)}</div>
+        </div>
+    `;
+}
+
+function renderTopChannels(channels) {
+    const wrap = document.getElementById('topChannels');
+    wrap.innerHTML = channels.slice(0, 3).map(renderChannelItem).join('');
+}
+
+function renderAllChannels(channels) {
+    const wrap = document.getElementById('allChannels');
+    wrap.innerHTML = channels.map(renderChannelItem).join('');
+}
+
+/* ---------- Persons Bar ---------- */
+function renderPersons(persons) {
+    const ctx = document.getElementById('personChart');
+    if (charts.person) charts.person.destroy();
+
+    charts.person = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: data.channels.map(c => c.name),
+            labels: persons.map(p => p.name),
             datasets: [{
-                data: data.channels.map(c => c.count),
-                backgroundColor: 'rgba(201,169,110,0.8)',
-                borderRadius: 8,
+                data: persons.map(p => p.count),
+                backgroundColor: (ctx) => {
+                    const { ctx: c, chartArea } = ctx.chart;
+                    if (!chartArea) return 'rgba(245, 197, 99, 0.7)';
+                    const g = c.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                    g.addColorStop(0, 'rgba(167, 139, 250, 0.9)');
+                    g.addColorStop(1, 'rgba(245, 197, 99, 0.9)');
+                    return g;
+                },
+                borderRadius: 10,
+                borderSkipped: false,
+                barThickness: 22,
             }]
         },
         options: {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    rtl: true,
+                    titleFont: { family: 'Vazirmatn', size: 12 },
+                    bodyFont: { family: 'Vazirmatn', size: 12 },
+                    padding: 10,
+                    cornerRadius: 10,
+                    displayColors: false,
+                }
+            },
             scales: {
                 x: {
                     beginAtZero: true,
                     ticks: {
-                        color: getComputedStyle(document.body).getPropertyValue('--tg-hint').trim() || '#999',
-                        font: { size: 11 },
+                        color: getComputedStyle(document.body).color,
+                        font: { family: 'Vazirmatn', size: 11 },
                     },
-                    grid: { color: 'rgba(128,128,128,0.1)' },
+                    grid: { color: 'rgba(255,255,255,0.05)' },
                 },
                 y: {
                     ticks: {
-                        color: getComputedStyle(document.body).getPropertyValue('--tg-text').trim() || '#000',
-                        font: { size: 11 },
+                        color: getComputedStyle(document.body).color,
+                        font: { family: 'Vazirmatn', size: 11, weight: '600' },
                     },
                     grid: { display: false },
                 }
-            }
-        }
-    });
-
-    // Daily Chart (Line)
-    new Chart(document.getElementById('dayChart'), {
-        type: 'line',
-        data: {
-            labels: data.daily.map(d => d.date),
-            datasets: [{
-                data: data.daily.map(d => d.count),
-                borderColor: '#C9A96E',
-                backgroundColor: 'rgba(201,169,110,0.15)',
-                tension: 0.4,
-                fill: true,
-                borderWidth: 2.5,
-                pointRadius: 4,
-                pointBackgroundColor: '#C9A96E',
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: getComputedStyle(document.body).getPropertyValue('--tg-hint').trim() || '#999',
-                        font: { size: 11 },
-                    },
-                    grid: { color: 'rgba(128,128,128,0.1)' },
-                },
-                x: {
-                    ticks: {
-                        color: getComputedStyle(document.body).getPropertyValue('--tg-hint').trim() || '#999',
-                        font: { size: 11 },
-                    },
-                    grid: { display: false },
-                }
-            }
+            },
+            animation: { duration: 1200, easing: 'easeOutQuart' }
         }
     });
 }
 
-// ============================================================
-// Chip Filter Handler
-// ============================================================
-document.getElementById('chips')?.addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip');
-    if (!chip) return;
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    // TODO: فیلتر واقعی
-    if (tg) tg.HapticFeedback.selectionChanged();
-});
-
-// ============================================================
-// Bottom Nav Handler
-// ============================================================
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-        if (tg) tg.HapticFeedback.selectionChanged();
-    });
-});
-
-// ============================================================
-// Theme Change Listener
-// ============================================================
-if (tg) {
-    tg.onEvent('themeChanged', () => {
-        // بروزرسانی نمودارها با تم جدید
-        Chart.helpers.each(Chart.instances, (chart) => {
-            chart.options.plugins.legend.labels.color =
-                getComputedStyle(document.body).getPropertyValue('--tg-text').trim() || '#000';
-            chart.update();
-        });
-    });
+/* ---------- System Info ---------- */
+function renderSystemInfo(data) {
+    document.getElementById('systemInfo').innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--tg-hint);font-size:12px;">📡 تعداد کانال</span>
+                <span style="font-weight:700;">${toFa(data.channels_count)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--tg-hint);font-size:12px;">🎯 کل مچ‌ها</span>
+                <span style="font-weight:700;">${toFa(data.total)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--tg-hint);font-size:12px;">💧 آب و فاضلاب</span>
+                <span style="font-weight:700;color:var(--water-1);">${toFa(data.water)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:var(--tg-hint);font-size:12px;">⚡ برق و انرژی</span>
+                <span style="font-weight:700;color:var(--energy-1);">${toFa(data.energy)}</span>
+            </div>
+        </div>
+    `;
 }
 
-// ============================================================
-// Init
-// ============================================================
-fetchData();
+/* ============================================================
+   🧭 Navigation
+   ============================================================ */
+function switchTab(name) {
+    haptic('light');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    document.getElementById('page-' + name)?.classList.add('active');
+    document.querySelector(`.nav-item[data-tab="${name}"]`)?.classList.add('active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   🎛 Segmented Filter
+   ============================================================ */
+document.querySelectorAll('.segment').forEach(seg => {
+    seg.addEventListener('click', () => {
+        haptic('selection');
+        document.querySelectorAll('.segment').forEach(s => s.classList.remove('active'));
+        seg.classList.add('active');
+        showToast(`فیلتر: ${seg.textContent.trim()}`);
+        // TODO: فیلتر واقعی
+    });
+});
+
+/* ============================================================
+   🔄 Refresh
+   ============================================================ */
+async function refreshData() {
+    haptic('medium');
+    const btn = document.getElementById('refreshBtn');
+    btn.style.transform = 'rotate(360deg)';
+    btn.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+    setTimeout(() => {
+        btn.style.transform = '';
+        btn.style.transition = '';
+    }, 600);
+
+    try {
+        const data = await fetchData();
+        render(data);
+        showToast('✓ بروزرسانی شد');
+    } catch (e) {
+        showToast('❌ خطا در دریافت داده');
+    }
+}
+
+/* ============================================================
+   🍞 Toast
+   ============================================================ */
+let toastTimer;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   🔢 Persian Digits Helper
+   ============================================================ */
+function toFa(n) {
+    return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+/* ============================================================
+   🎬 Init
+   ============================================================ */
+(async () => {
+    try {
+        const data = await fetchData();
+        render(data);
+    } catch (e) {
+        console.error(e);
+        showToast('❌ خطا در بارگذاری');
+    }
+})();
 </script>
+
 </body>
 </html>
