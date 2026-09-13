@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>داشبورد مانیتور</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+    :root {
+        --tg-bg: var(--tg-theme-bg-color, #ffffff);
+        --tg-text: var(--tg-theme-text-color, #000000);
+        --tg-hint: var(--tg-theme-hint-color, #999999);
+        --tg-link: var(--tg-theme-link-color, #2481cc);
+        --tg-button: var(--tg-theme-button-color, #2481cc);
+        --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+        --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
+        --tg-header-bg: var(--tg-theme-header-bg-color, #ffffff);
+        --tg-accent: var(--tg-theme-accent-text-color, #2481cc);
+        --gold: #C9A96E;
+        --gold-dark: #A88B4F;
+        --water: #2563eb;
+        --energy: #f59e0b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, 'Vazirmatn', Tahoma, sans-serif;
+        background: var(--tg-bg);
+        color: var(--tg-text);
+        padding: 16px;
+        padding-bottom: 80px;
+        min-height: 100vh;
+        direction: rtl;
+        transition: background 0.3s, color 0.3s;
+    }
+
+    /* ===== Header ===== */
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 20px 0;
+    }
+    .header h1 {
+        font-size: 22px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 4px;
+    }
+    .header .subtitle {
+        font-size: 12px;
+        color: var(--tg-hint);
+    }
+
+    /* ===== KPI Cards ===== */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .kpi-card {
+        background: var(--tg-secondary-bg);
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+        transition: transform 0.2s;
+    }
+    .kpi-card:active { transform: scale(0.97); }
+    .kpi-card .value {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .kpi-card .label {
+        font-size: 11px;
+        color: var(--tg-hint);
+    }
+    .kpi-card.water .value { color: var(--water); }
+    .kpi-card.energy .value { color: var(--energy); }
+    .kpi-card.gold .value { color: var(--gold-dark); }
+
+    /* ===== Filter Chips ===== */
+    .chips {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+        scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+        flex-shrink: 0;
+        padding: 8px 16px;
+        border-radius: 100px;
+        border: 1.5px solid var(--tg-secondary-bg);
+        background: var(--tg-bg);
+        color: var(--tg-text);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .chip.active {
+        background: var(--tg-button);
+        color: var(--tg-button-text);
+        border-color: var(--tg-button);
+    }
+
+    /* ===== Chart Sections ===== */
+    .section {
+        margin-bottom: 24px;
+    }
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title::before {
+        content: '';
+        width: 3px;
+        height: 18px;
+        background: var(--gold);
+        border-radius: 3px;
+    }
+    .chart-container {
+        background: var(--tg-secondary-bg);
+        border-radius: 16px;
+        padding: 16px;
+        height: 260px;
+        position: relative;
+    }
+
+    /* ===== Bottom Nav ===== */
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--tg-header-bg);
+        border-top: 1px solid var(--tg-secondary-bg);
+        display: flex;
+        justify-content: space-around;
+        padding: 8px 0;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        z-index: 100;
+    }
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        font-size: 10px;
+        color: var(--tg-hint);
+        cursor: pointer;
+        padding: 4px 12px;
+        border-radius: 12px;
+        transition: all 0.2s;
+    }
+    .nav-item.active {
+        color: var(--tg-button);
+        background: rgba(36, 129, 204, 0.1);
+    }
+    .nav-item .icon { font-size: 20px; }
+
+    /* ===== Loading ===== */
+    .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 60vh;
+        gap: 16px;
+    }
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--tg-secondary-bg);
+        border-top-color: var(--tg-button);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: var(--tg-hint); font-size: 14px; }
+
+    /* ===== Fade-in ===== */
+    .fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Dark Mode ===== */
+    @media (prefers-color-scheme: dark) {
+        .kpi-card, .chart-container, .bottom-nav {
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+    }
+</style>
+</head>
+<body>
+
+<!-- Loading State -->
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>در حال بارگذاری داده‌ها...</p>
+</div>
+
+<!-- Main Content -->
+<div id="app" style="display: none;">
+
+    <div class="header">
+        <h1>📊 داشبورد مانیتور</h1>
+        <div class="subtitle">پایش هوشمند کانال‌های آب و فاضلاب</div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- Filter Chips -->
+    <div class="chips" id="chips">
+        <div class="chip active" data-filter="all">همه</div>
+        <div class="chip" data-filter="water">💧 آب و فاضلاب</div>
+        <div class="chip" data-filter="energy">⚡ برق و انرژی</div>
+        <div class="chip" data-filter="project">🏗 پروژه‌ها</div>
+        <div class="chip" data-filter="official">👤 مقامات</div>
+    </div>
+
+    <!-- Charts -->
+    <div class="section fade-in">
+        <div class="section-title">📊 توزیع دسته‌بندی</div>
+        <div class="chart-container">
+            <canvas id="catChart"></canvas>
+        </div>
+    </div>
+
+    <div class="section fade-in">
+        <div class="section-title">📡 مچ‌ها به تفکیک کانال</div>
+        <div class="chart-container" style="height: 300px;">
+            <canvas id="channelChart"></canvas>
+        </div>
+    </div>
+
+    <div class="section fade-in">
+        <div class="section-title">📅 روند روزانه</div>
+        <div class="chart-container" style="height: 220px;">
+            <canvas id="dayChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-tab="overview">
+            <span class="icon">📊</span>
+            <span>نمای کلی</span>
+        </div>
+        <div class="nav-item" data-tab="channels">
+            <span class="icon">📡</span>
+            <span>کانال‌ها</span>
+        </div>
+        <div class="nav-item" data-tab="persons">
+            <span class="icon">👤</span>
+            <span>مقامات</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// Telegram WebApp SDK
+// ============================================================
+const tg = window.Telegram?.WebApp;
+if (tg) {
+    tg.ready();
+    tg.expand();
+    // تنظیم رنگ هدر
+    tg.setHeaderColor('secondary_bg_color');
+    tg.setBackgroundColor('bg_color');
+    // فعال‌سازی دکمه بازگشت
+    tg.BackButton.show();
+    tg.BackButton.onClick(() => {
+        if (tg.MainButton.isVisible) tg.MainButton.hide();
+        window.history.back();
+    });
+}
+
+// ============================================================
+// دریافت داده از سرور (API)
+// ============================================================
+async function fetchData() {
+    try {
+        // اینجا باید API endpoint خود را صدا بزنید
+        // مثلاً: const res = await fetch('/api/dashboard');
+        // const data = await res.json();
+
+        // موقتاً داده نمونه:
+        const data = {
+            total: 288,
+            water: 254,
+            energy: 34,
+            categories: [
+                { name: 'فاضلاب و تصفیه', count: 97 },
+                { name: 'مدیریت و مقامات', count: 93 },
+                { name: 'سایر', count: 80 },
+                { name: 'آموزش و فرهنگ', count: 42 },
+                { name: 'پروژه و آبرسانی', count: 37 },
+                { name: 'برق و انرژی', count: 34 },
+                { name: 'مدیریت مصرف', count: 32 },
+                { name: 'افتتاح', count: 28 },
+                { name: 'روستا', count: 26 },
+            ],
+            channels: [
+                { name: 'صدا و سیمای البرز', count: 58 },
+                { name: 'صدا و سیمای کرمانشاه', count: 35 },
+                { name: 'همکار', count: 31 },
+                { name: 'آبفا خبر', count: 18 },
+                { name: 'آبفا فارس', count: 15 },
+                { name: 'خبرگزاری صدا و سیما', count: 12 },
+            ],
+            daily: [
+                { date: '۲۰ شهریور', count: 201 },
+                { date: '۲۱ شهریور', count: 87 },
+            ],
+        };
+
+        render(data);
+    } catch (e) {
+        console.error('Fetch error:', e);
+        document.getElementById('loading').innerHTML =
+            '<p style="color:red">❌ خطا در دریافت داده</p>';
+    }
+}
+
+// ============================================================
+// رندر داشبورد
+// ============================================================
+function render(data) {
+    // مخفی کردن loading
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    // KPI Cards
+    const kpiGrid = document.getElementById('kpiGrid');
+    kpiGrid.innerHTML = `
+        <div class="kpi-card gold">
+            <div class="value">${data.total.toLocaleString('fa')}</div>
+            <div class="label">🎯 کل مچ‌ها</div>
+        </div>
+        <div class="kpi-card water">
+            <div class="value">${data.water.toLocaleString('fa')}</div>
+            <div class="label">💧 آب و فاضلاب</div>
+        </div>
+        <div class="kpi-card energy">
+            <div class="value">${data.energy.toLocaleString('fa')}</div>
+            <div class="label">⚡ برق و انرژی</div>
+        </div>
+        <div class="kpi-card">
+            <div class="value">${data.channels.length}</div>
+            <div class="label">📡 کانال فعال</div>
+        </div>
+    `;
+
+    // Chart Colors
+    const colors = [
+        '#C9A96E', '#2563eb', '#f59e0b', '#10b981',
+        '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316',
+    ];
+
+    // Category Chart (Doughnut)
+    new Chart(document.getElementById('catChart'), {
+        type: 'doughnut',
+        data: {
+            labels: data.categories.map(c => c.name),
+            datasets: [{
+                data: data.categories.map(c => c.count),
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: getComputedStyle(document.body).getPropertyValue('--tg-bg').trim() || '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: getComputedStyle(document.body).getPropertyValue('--tg-text').trim() || '#000',
+                        font: { size: 11 },
+                        boxWidth: 12,
+                        padding: 8,
+                    }
+                }
+            },
+            cutout: '65%',
+        }
+    });
+
+    // Channel Chart (Horizontal Bar)
+    new Chart(document.getElementById('channelChart'), {
+        type: 'bar',
+        data: {
+            labels: data.channels.map(c => c.name),
+            datasets: [{
+                data: data.channels.map(c => c.count),
+                backgroundColor: 'rgba(201,169,110,0.8)',
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--tg-hint').trim() || '#999',
+                        font: { size: 11 },
+                    },
+                    grid: { color: 'rgba(128,128,128,0.1)' },
+                },
+                y: {
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--tg-text').trim() || '#000',
+                        font: { size: 11 },
+                    },
+                    grid: { display: false },
+                }
+            }
+        }
+    });
+
+    // Daily Chart (Line)
+    new Chart(document.getElementById('dayChart'), {
+        type: 'line',
+        data: {
+            labels: data.daily.map(d => d.date),
+            datasets: [{
+                data: data.daily.map(d => d.count),
+                borderColor: '#C9A96E',
+                backgroundColor: 'rgba(201,169,110,0.15)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 2.5,
+                pointRadius: 4,
+                pointBackgroundColor: '#C9A96E',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--tg-hint').trim() || '#999',
+                        font: { size: 11 },
+                    },
+                    grid: { color: 'rgba(128,128,128,0.1)' },
+                },
+                x: {
+                    ticks: {
+                        color: getComputedStyle(document.body).getPropertyValue('--tg-hint').trim() || '#999',
+                        font: { size: 11 },
+                    },
+                    grid: { display: false },
+                }
+            }
+        }
+    });
+}
+
+// ============================================================
+// Chip Filter Handler
+// ============================================================
+document.getElementById('chips')?.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    // TODO: فیلتر واقعی
+    if (tg) tg.HapticFeedback.selectionChanged();
+});
+
+// ============================================================
+// Bottom Nav Handler
+// ============================================================
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        if (tg) tg.HapticFeedback.selectionChanged();
+    });
+});
+
+// ============================================================
+// Theme Change Listener
+// ============================================================
+if (tg) {
+    tg.onEvent('themeChanged', () => {
+        // بروزرسانی نمودارها با تم جدید
+        Chart.helpers.each(Chart.instances, (chart) => {
+            chart.options.plugins.legend.labels.color =
+                getComputedStyle(document.body).getPropertyValue('--tg-text').trim() || '#000';
+            chart.update();
+        });
+    });
+}
+
+// ============================================================
+// Init
+// ============================================================
+fetchData();
+</script>
+</body>
+</html>
