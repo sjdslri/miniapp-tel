@@ -3004,7 +3004,118 @@ body::after {
     box-shadow: 0 0 8px var(--mint);
     animation: dotPulse 2s ease-in-out infinite;
 }
-
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 42.6 — CHANNELS & KEYWORDS PAGES
+   ═══════════════════════════════════════════════════════════════ */
+.channel-grid, .keyword-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+.channel-chip, .keyword-chip {
+    padding: 12px 14px;
+    border-radius: var(--r-md);
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s var(--easing-bounce);
+    position: relative;
+    overflow: hidden;
+}
+.channel-chip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-soft), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.channel-chip:active {
+    transform: scale(0.96);
+    border-color: var(--accent);
+}
+.channel-chip:active::before { opacity: 1; }
+.channel-chip-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 11px;
+    color: #fff;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+.channel-chip-body {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+.channel-chip-name {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+.channel-chip-user {
+    font-size: 9.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.keyword-chip {
+    justify-content: center;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--fg);
+    padding: 10px 12px;
+}
+.keyword-chip:active {
+    transform: scale(0.94);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.keywords-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.kw-stat {
+    text-align: center;
+    padding: 14px 8px;
+    border-radius: var(--r-md);
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+}
+.kw-stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.kw-stat-label {
+    font-size: 9.5px;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 43 — PRINT
    ═══════════════════════════════════════════════════════════════════ */
@@ -3403,6 +3514,49 @@ body::after {
             <div id="bookmarksList"></div>
         </div>
     </div>
+<!-- ============ VIEW: MONITORED CHANNELS ============ -->
+<div class="page-view" data-page="monitored-channels">
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">📡 کانال‌های پایش‌شده</div>
+            <span class="panel-action" id="monitoredChannelsCount">—</span>
+        </div>
+        <input type="text" class="search-input" id="searchMonitoredChannels" placeholder="🔍 جستجو در کانال‌ها...">
+        <div class="channel-grid" id="monitoredChannelsGrid">
+            <div class="skeleton" style="height:60px"></div>
+            <div class="skeleton" style="height:60px"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ VIEW: KEYWORDS ============ -->
+<div class="page-view" data-page="keywords">
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">🔑 کلیدواژه‌های پایش</div>
+            <span class="panel-action" id="keywordsCount">—</span>
+        </div>
+        <div class="keywords-stats">
+            <div class="kw-stat">
+                <div class="kw-stat-value" id="kwTotal">—</div>
+                <div class="kw-stat-label">کل کلیدواژه</div>
+            </div>
+            <div class="kw-stat">
+                <div class="kw-stat-value" id="kwPersian">—</div>
+                <div class="kw-stat-label">فارسی</div>
+            </div>
+            <div class="kw-stat">
+                <div class="kw-stat-value" id="kwEnglish">—</div>
+                <div class="kw-stat-label">انگلیسی</div>
+            </div>
+        </div>
+        <input type="text" class="search-input" id="searchKeywords" placeholder="🔍 جستجو در کلیدواژه‌ها...">
+        <div class="keyword-grid" id="keywordsGrid">
+            <div class="skeleton" style="height:40px"></div>
+            <div class="skeleton" style="height:40px"></div>
+        </div>
+    </div>
+</div>
 
     <!-- ============ VIEW: MORE ============ -->
     <div class="page-view" data-page="more">
@@ -3569,6 +3723,8 @@ body::after {
     <button class="nav-btn active" data-nav="overview"><span class="nav-icon">◆</span><span class="nav-label">نمای کلی</span></button>
     <button class="nav-btn" data-nav="channels"><span class="nav-icon">📡</span><span class="nav-label">کانال‌ها</span></button>
     <button class="nav-btn" data-nav="persons"><span class="nav-icon">👤</span><span class="nav-label">مقامات</span></button>
+       <button class="nav-btn" data-nav="monitored-channels"><span class="nav-icon">📋</span><span class="nav-label">پایش</span></button>
+    <button class="nav-btn" data-nav="keywords"><span class="nav-icon">🔑</span><span class="nav-label">کلیدواژه</span></button>
     <button class="nav-btn" data-nav="messages"><span class="nav-icon">💬</span><span class="nav-label">پیام‌ها</span></button>
     <button class="nav-btn" data-nav="analytics"><span class="nav-icon">📊</span><span class="nav-label">تحلیل</span></button>
     <button class="nav-btn" data-nav="more"><span class="nav-icon">⋯</span><span class="nav-label">بیشتر</span></button>
@@ -5365,7 +5521,108 @@ document.getElementById('onbSkip').onclick = () => {
     Haptic.impact('light');
     closeOnboarding();
 };
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 85.5 — MONITORED CHANNELS & KEYWORDS
+   ═══════════════════════════════════════════════════════════════════ */
+let MonitoredChannels = [];
+let MonitoredKeywords = [];
 
+async function loadMonitoredData() {
+    try {
+        const [chRes, kwRes] = await Promise.all([
+            fetch('channels.json').catch(() => null),
+            fetch('keywords.json').catch(() => null)
+        ]);
+        if (chRes && chRes.ok) MonitoredChannels = await chRes.json();
+        if (kwRes && kwRes.ok) MonitoredKeywords = await kwRes.json();
+    } catch (e) {
+        console.warn('Could not load JSON files:', e);
+    }
+    renderMonitoredChannels();
+    renderKeywords();
+}
+
+function renderMonitoredChannels() {
+    const grid = document.getElementById('monitoredChannelsGrid');
+    if (!grid) return;
+    const countEl = document.getElementById('monitoredChannelsCount');
+    if (countEl) countEl.textContent = toFa(MonitoredChannels.length) + ' کانال';
+    if (!MonitoredChannels.length) {
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">📡</div><div class="empty-title">کانالی یافت نشد</div></div>';
+        return;
+    }
+    grid.innerHTML = MonitoredChannels.map(ch => {
+        const grad = avatarGradient(ch.username);
+        const initials = ch.name.slice(0, 2);
+        return `<div class="channel-chip" onclick="openChannelLink('${escapeHtml(ch.username)}')">
+            <div class="channel-chip-avatar" style="background:${grad}">${escapeHtml(initials)}</div>
+            <div class="channel-chip-body">
+                <div class="channel-chip-name">${escapeHtml(ch.name)}</div>
+                <div class="channel-chip-user">@${escapeHtml(ch.username)}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openChannelLink(username) {
+    Haptic.impact('light');
+    if (tg?.openTelegramLink) {
+        tg.openTelegramLink(`https://ble.ir/${username}`);
+    } else {
+        window.open(`https://ble.ir/${username}`, '_blank');
+    }
+}
+
+function renderKeywords() {
+    const grid = document.getElementById('keywordsGrid');
+    if (!grid) return;
+    const countEl = document.getElementById('keywordsCount');
+    if (countEl) countEl.textContent = toFa(MonitoredKeywords.length) + ' کلیدواژه';
+    const persian = MonitoredKeywords.filter(k => /[\u0600-\u06FF]/.test(k)).length;
+    const english = MonitoredKeywords.length - persian;
+    const kwTotal = document.getElementById('kwTotal');
+    const kwPersian = document.getElementById('kwPersian');
+    const kwEnglish = document.getElementById('kwEnglish');
+    if (kwTotal) kwTotal.textContent = toFa(MonitoredKeywords.length);
+    if (kwPersian) kwPersian.textContent = toFa(persian);
+    if (kwEnglish) kwEnglish.textContent = toFa(english);
+    if (!MonitoredKeywords.length) {
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">🔑</div><div class="empty-title">کلیدواژه‌ای یافت نشد</div></div>';
+        return;
+    }
+    grid.innerHTML = MonitoredKeywords.map(k =>
+        `<div class="keyword-chip" onclick="searchKeyword('${escapeHtml(k)}')">${escapeHtml(k)}</div>`
+    ).join('');
+}
+
+function searchKeyword(kw) {
+    Haptic.selection();
+    switchView('messages');
+    setTimeout(() => {
+        const inp = document.getElementById('searchMessages');
+        if (inp) {
+            inp.value = kw;
+            inp.dispatchEvent(new Event('input'));
+        }
+    }, 200);
+}
+
+setTimeout(() => {
+    const sc = document.getElementById('searchMonitoredChannels');
+    if (sc) sc.oninput = (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        document.querySelectorAll('#monitoredChannelsGrid .channel-chip').forEach(c => {
+            c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    };
+    const sk = document.getElementById('searchKeywords');
+    if (sk) sk.oninput = (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        document.querySelectorAll('#keywordsGrid .keyword-chip').forEach(c => {
+            c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    };
+}, 800);
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 86 — INIT
    ═══════════════════════════════════════════════════════════════════ */
@@ -5377,6 +5634,7 @@ document.getElementById('onbSkip').onclick = () => {
 
         const data = await fetchData();
         renderAll(data);
+               await loadMonitoredData();
         if (State.autoRefresh) startAutoRefresh();
 
         setTimeout(() => {
