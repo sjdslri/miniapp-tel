@@ -3515,7 +3515,1677 @@ body::after {
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- PART_2_SCRIPT_PLACEHOLDER -->
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 46 — TELEGRAM INIT
+   ═══════════════════════════════════════════════════════════════════ */
+const tg = window.Telegram?.WebApp;
+const Haptic = {
+    impact: (s='light') => { try { tg?.HapticFeedback?.impactOccurred(s); } catch(e){} },
+    selection: () => { try { tg?.HapticFeedback?.selectionChanged(); } catch(e){} },
+    notify: (t='success') => { try { tg?.HapticFeedback?.notificationOccurred(t); } catch(e){} },
+};
+if (tg) {
+    tg.ready();
+    tg.expand();
+    tg.setHeaderColor('#05050A');
+    tg.setBackgroundColor('#05050A');
+    tg.enableClosingConfirmation();
+    if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 47 — STATE
+   ═══════════════════════════════════════════════════════════════════ */
+const State = {
+    data: null,
+    charts: {},
+    filter: 'all',
+    sortChannels: 'count_desc',
+    sortMessages: 'recent',
+    dateRange: {
+        from: localStorage.getItem('dateFrom') || '1405-06-01',
+        to: localStorage.getItem('dateTo') || '1405-06-21'
+    },
+    autoRefresh: localStorage.getItem('autoRefresh') !== 'false',
+    refreshInterval: 60000,
+    refreshTimer: null,
+    theme: localStorage.getItem('theme') || 'gold',
+    speed: localStorage.getItem('speed') || 'normal',
+    fontSize: localStorage.getItem('fontSize') || 'md',
+    bookmarks: JSON.parse(localStorage.getItem('bookmarks') || '[]'),
+    alerts: [],
+    searchHistory: JSON.parse(localStorage.getItem('searchHistory') || '[]'),
+    allMessages: [],
+    onboardingStep: 0,
+    onboardingShown: localStorage.getItem('onbShown') === 'true',
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 48 — UTILS
+   ═══════════════════════════════════════════════════════════════════ */
+function toFa(n) {
+    return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+function escapeHtml(s) {
+    if (!s) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+function avatarGradient(seed) {
+    const grads = [
+        'linear-gradient(135deg, #C9A96E, #A88B4F)',
+        'linear-gradient(135deg, #4A9EFF, #2B6FDB)',
+        'linear-gradient(135deg, #FFB84D, #FF7B2C)',
+        'linear-gradient(135deg, #B794F6, #7C3AED)',
+        'linear-gradient(135deg, #6EE7D4, #14B8A6)',
+        'linear-gradient(135deg, #FF8FA3, #E11D48)',
+        'linear-gradient(135deg, #84CC16, #65A30D)',
+        'linear-gradient(135deg, #06B6D4, #0891B2)',
+    ];
+    let h = 0;
+    for (const c of String(seed || '')) h = (h * 31 + c.charCodeAt(0)) | 0;
+    return grads[Math.abs(h) % grads.length];
+}
+function animateNumber(el, target, duration = 1400) {
+    const t0 = performance.now();
+    (function step(t) {
+        const p = Math.min(1, (t - t0) / duration);
+        const eased = 1 - Math.pow(1 - p, 4);
+        el.textContent = toFa(Math.round(target * eased));
+        if (p < 1) requestAnimationFrame(step);
+    })(t0);
+}
+function formatTime(date = new Date()) {
+    return date.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 49 — TOAST SYSTEM
+   ═══════════════════════════════════════════════════════════════════ */
+const toastContainer = document.getElementById('toastContainer');
+function showToast(msg, type = 'info', duration = 2400) {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    toastContainer.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => {
+        t.classList.remove('show');
+        setTimeout(() => t.remove(), 400);
+    }, duration);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 50 — CONFETTI
+   ═══════════════════════════════════════════════════════════════════ */
+function launchConfetti(count = 40) {
+    const colors = ['#C9A96E', '#4A9EFF', '#FFB84D', '#B794F6', '#6EE7D4', '#FF8FA3'];
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const p = document.createElement('div');
+            p.className = 'confetti-piece';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.top = '-20px';
+            p.style.background = colors[Math.floor(Math.random() * colors.length)];
+            p.style.width = (Math.random() * 8 + 6) + 'px';
+            p.style.height = (Math.random() * 8 + 6) + 'px';
+            p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            p.style.animationDelay = (Math.random() * 0.5) + 's';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 3200);
+        }, i * 20);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 51 — PRELOADER
+   ═══════════════════════════════════════════════════════════════════ */
+const loadCounter = document.getElementById('loadCounter');
+let loadVal = 0;
+const loadInterval = setInterval(() => {
+    loadVal += Math.random() * 12;
+    if (loadVal >= 100) {
+        loadVal = 100;
+        clearInterval(loadInterval);
+        setTimeout(() => {
+            document.getElementById('preloader').classList.add('done');
+            document.getElementById('app').classList.add('loaded');
+            startHeroAnimation();
+            if (!State.onboardingShown) {
+                setTimeout(startOnboarding, 800);
+            }
+        }, 400);
+    }
+    loadCounter.textContent = Math.floor(loadVal);
+}, 100);
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 52 — HERO ANIMATION
+   ═══════════════════════════════════════════════════════════════════ */
+function splitLetters(text) {
+    return [...text].map((ch, i) =>
+        `<span class="ltr" style="--i:${i}">${escapeHtml(ch)}</span>`
+    ).join('');
+}
+function startHeroAnimation() {
+    document.getElementById('heroWord1').innerHTML = splitLetters('گزارش');
+    document.getElementById('heroWord2').innerHTML = splitLetters('رصد');
+    document.getElementById('heroWord3').innerHTML = splitLetters('کلیدواژه');
+
+    const typeEl = document.getElementById('typewriter');
+    const typeText = 'تحلیل هوشمند محتوای کانال‌های بله';
+    let idx = 0;
+    (function type() {
+        if (idx < typeText.length) {
+            typeEl.textContent += typeText.charAt(idx++);
+            setTimeout(type, 45);
+        }
+    })();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 53 — CUSTOM CURSOR
+   ═══════════════════════════════════════════════════════════════════ */
+const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+if (isDesktop) {
+    const cd = document.getElementById('cursorDot');
+    const cr = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0, lastTrail = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        mx = e.clientX;
+        my = e.clientY;
+        cd.style.left = mx + 'px';
+        cd.style.top = my + 'px';
+        const now = Date.now();
+        if (now - lastTrail > 45) {
+            lastTrail = now;
+            const t = document.createElement('div');
+            t.className = 'cursor-trail';
+            t.style.left = mx + 'px';
+            t.style.top = my + 'px';
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 900);
+        }
+    });
+
+    (function animRing() {
+        rx += (mx - rx) * 0.16;
+        ry += (my - ry) * 0.16;
+        cr.style.left = rx + 'px';
+        cr.style.top = ry + 'px';
+        requestAnimationFrame(animRing);
+    })();
+
+    document.addEventListener('mouseover', (e) => {
+        const t = e.target.closest('a,button,.row,.kpi,.chip,.nav-btn,.panel-action,.top-btn,.cmd-item,.sheet-close');
+        if (t) cr.classList.add('hover');
+        else cr.classList.remove('hover');
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 54 — PARTICLES
+   ═══════════════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('particles');
+const pctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resizeCanvas() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * W;
+        this.y = Math.random() * H;
+        this.size = Math.random() * 1.8 + 0.3;
+        this.sx = (Math.random() - 0.5) * 0.15;
+        this.sy = (Math.random() - 0.5) * 0.15;
+        this.o = Math.random() * 0.45 + 0.15;
+    }
+    update() {
+        this.x += this.sx;
+        this.y += this.sy;
+        if (this.x < 0) this.x = W;
+        if (this.x > W) this.x = 0;
+        if (this.y < 0) this.y = H;
+        if (this.y > H) this.y = 0;
+    }
+    draw() {
+        pctx.fillStyle = `rgba(201, 169, 110, ${this.o})`;
+        pctx.beginPath();
+        pctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        pctx.fill();
+    }
+}
+for (let i = 0; i < 55; i++) particles.push(new Particle());
+
+(function animateParticles() {
+    pctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animateParticles);
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 55 — RIPPLE ON CLICK
+   ═══════════════════════════════════════════════════════════════════ */
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.row,.kpi,.chip,.nav-btn,.panel-action,.top-btn')) return;
+    for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+            const r = document.createElement('div');
+            r.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;width:6px;height:6px;border-radius:50%;background:rgba(201,169,110,${0.5 - i * 0.15});transform:translate(-50%,-50%);pointer-events:none;z-index:9999;transition:transform 1.1s cubic-bezier(0.22,1,0.36,1),opacity 1.1s;`;
+            document.body.appendChild(r);
+            requestAnimationFrame(() => {
+                r.style.transform = 'translate(-50%,-50%) scale(22)';
+                r.style.opacity = '0';
+            });
+            setTimeout(() => r.remove(), 1200);
+        }, i * 80);
+    }
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 56 — PROGRESS BAR
+   ═══════════════════════════════════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+    const s = document.body.scrollTop || document.documentElement.scrollTop;
+    const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    document.getElementById('progressBar').style.width = (s / h) * 100 + '%';
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 57 — REVEAL ON SCROLL
+   ═══════════════════════════════════════════════════════════════════ */
+const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            revealObs.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.05, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 58 — TILT CARDS
+   ═══════════════════════════════════════════════════════════════════ */
+if (isDesktop) {
+    document.querySelectorAll('[data-tilt]').forEach(el => {
+        el.addEventListener('mousemove', (e) => {
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width - 0.5;
+            const y = (e.clientY - r.top) / r.height - 0.5;
+            el.style.transform = `perspective(900px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateY(-4px) scale(1.02)`;
+        });
+        el.addEventListener('mouseleave', () => el.style.transform = '');
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 59 — PULL TO REFRESH
+   ═══════════════════════════════════════════════════════════════════ */
+let touchStartY = 0, pulling = false, pullDistance = 0;
+const ptr = document.getElementById('ptrIndicator');
+
+document.addEventListener('touchstart', (e) => {
+    if (window.scrollY === 0) { touchStartY = e.touches[0].clientY; pulling = true; }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    pullDistance = e.touches[0].clientY - touchStartY;
+    if (pullDistance > 40 && pullDistance < 200) {
+        ptr.classList.add('active');
+        ptr.style.transform = `translate(-50%,${20 + pullDistance * 0.3}px)`;
+    }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+    if (pullDistance > 80) {
+        ptr.classList.add('spinning');
+        refreshData();
+        setTimeout(() => {
+            ptr.classList.remove('active', 'spinning');
+            ptr.style.transform = '';
+        }, 1500);
+    } else {
+        ptr.classList.remove('active');
+        ptr.style.transform = '';
+    }
+    pulling = false;
+    pullDistance = 0;
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 60 — SAMPLE DATA
+   ═══════════════════════════════════════════════════════════════════ */
+const API_URL = '';
+const SAMPLE_DATA = {
+    total: 288, water: 254, energy: 34, channelsCount: 8, personsCount: 7,
+    categories: [
+        { name: 'فاضلاب و تصفیه', count: 97 },
+        { name: 'مدیریت و مقامات', count: 93 },
+        { name: 'سایر', count: 80 },
+        { name: 'آموزش و فرهنگ', count: 42 },
+        { name: 'پروژه و آبرسانی', count: 37 },
+        { name: 'برق و انرژی', count: 34 },
+        { name: 'مدیریت مصرف', count: 32 },
+        { name: 'افتتاح', count: 28 },
+    ],
+    daily: [
+        { date: '۱۴ شهریور', count: 32 }, { date: '۱۵ شهریور', count: 45 },
+        { date: '۱۶ شهریور', count: 28 }, { date: '۱۷ شهریور', count: 51 },
+        { date: '۱۸ شهریور', count: 62 }, { date: '۱۹ شهریور', count: 38 },
+        { date: '۲۰ شهریور', count: 201 }, { date: '۲۱ شهریور', count: 87 },
+    ],
+    hourly: [2,1,1,1,2,3,8,15,22,28,31,29,25,30,35,32,28,24,20,18,15,12,8,5],
+    channels: [
+        { name: 'صدا و سیمای استان البرز', username: 'alborz_tv', count: 58, messages: [
+            { text: 'افتتاح زورخانه آقا مرتضی علی (ع) با حضور مسئولین استان البرز', date: '۲۰ شهریور ۱۴۰۵', keywords: ['افتتاح','پروژه'], type: 'project' },
+            { text: 'الزام شهرداری‌های ساوجبلاغ به استفاده از پساب برای آبیاری فضای سبز', date: '۲۰ شهریور ۱۴۰۵', keywords: ['فاضلاب','پساب','تصفیه'], type: 'water' },
+            { text: 'برگزاری پویش مردمی «همه حاضر» برای دانش‌آموزان نیازمند', date: '۲۰ شهریور ۱۴۰۵', keywords: ['پویش','دانش‌آموز'], type: 'management' }
+        ]},
+        { name: 'صدا و سیمای کرمانشاه', username: 'tvzagross', count: 35, messages: [
+            { text: 'جدول زمانبندی قطعی برق استان کرمانشاه شنبه ۲۱ شهریور ۱۴۰۵', date: '۲۰ شهریور ۱۴۰۵', keywords: ['قطعی برق','برق'], type: 'energy' },
+            { text: 'هر قطره آب، یک فرصت برای زندگی #مدیریت_مصرف #همیار_آب', date: '۲۰ شهریور ۱۴۰۵', keywords: ['مدیریت مصرف','صرفه‌جویی'], type: 'management' }
+        ]},
+        { name: 'همکار', username: 'hamkaar', count: 31, messages: [
+            { text: 'آموزش مدیریت مصرف آب در حاشیه رویداد هنرهای حجمی شهریار', date: '۲۱ شهریور ۱۴۰۵', keywords: ['مدیریت مصرف','آموزش'], type: 'management' },
+            { text: 'اجرای ۱۸ اقدام عملیاتی برای عبور از تنش آبی تابستان ۱۴۰۵', date: '۲۱ شهریور ۱۴۰۵', keywords: ['تنش آبی','آبرسانی'], type: 'water' }
+        ]},
+        { name: 'آبفا خبر', username: 'abfa_khabar', count: 18, messages: [
+            { text: 'کاهنده‌های کوچک، مؤثر در مقیاس بزرگ/ صرفه‌جویی سالانه ۷۳ میلیون مترمکعب آب', date: '۲۰ شهریور ۱۴۰۵', keywords: ['کاهنده','مدیریت مصرف'], type: 'management' }
+        ]},
+        { name: 'شرکت آب و فاضلاب فارس', username: 'abfafars', count: 15, messages: [
+            { text: 'بازسازی ۲۴۰۰ متر از شبکه توزیع آب روستای سیوند مرودشت', date: '۲۰ شهریور ۱۴۰۵', keywords: ['شبکه توزیع','روستا'], type: 'project' }
+        ]},
+        { name: 'خبرگزاری صدا و سیما', username: 'iribnews', count: 12, messages: [
+            { text: 'وزیر نیرو: ممکن است بارش‌های سهمگین داشته باشیم / همه آماده باشند', date: '۲۱ شهریور ۱۴۰۵', keywords: ['وزیر نیرو','بارش'], type: 'energy' }
+        ]},
+        { name: 'آب و فاضلاب خراسان جنوبی', username: 'abfakhj', count: 12, messages: [
+            { text: 'تصفیه بیش از ۳.۸ میلیون مترمکعب فاضلاب در بیرجند طی ۵ ماه نخست سال', date: '۲۰ شهریور ۱۴۰۵', keywords: ['تصفیه','فاضلاب','بیرجند'], type: 'water' }
+        ]},
+        { name: 'کانال خبری وزارت نیرو', username: 'niroonline', count: 12, messages: [
+            { text: 'بهره‌برداری از ۴ واحد نیروگاه برق‌آبی سد چمشیر (۱۲۰ مگاوات)', date: '۲۱ شهریور ۱۴۰۵', keywords: ['نیروگاه','افتتاح'], type: 'energy' }
+        ]}
+    ],
+    persons: [
+        { name: 'احمد سلامت', role: 'مدیرعامل فاضلاب تهران', count: 13, mentions: [
+            { text: 'کاهنده‌های کوچک، مؤثر در مقیاس بزرگ/ صرفه‌جویی سالانه ۷۳ میلیون مترمکعب آب، معادل یک سد لتیان', date: '۲۰ شهریور ۱۴۰۵', channel: '@abfa_khabar', keywords: ['مدیریت مصرف','کاهنده'] },
+            { text: 'محوطه ساختمان زرگنده به تجهیزات ورزش همگانی مجهز شد', date: '۲۱ شهریور ۱۴۰۵', channel: '@hamkarabfa1', keywords: ['آبفا'] }
+        ]},
+        { name: 'مسعود پزشکیان', role: 'رئیس‌جمهور', count: 8, mentions: [
+            { text: 'دولت در مدیریت فرایند اصلاح الگوی مصرف پیشگام است / از هیچ تلاشی برای حمایت از چرخه تولید فروگذار نخواهیم کرد', date: '۲۰ شهریور ۱۴۰۵', channel: '@niroonline', keywords: ['مدیریت مصرف','اصلاح الگوی مصرف'] }
+        ]},
+        { name: 'عباس علی‌آبادی', role: 'وزیر نیرو', count: 7, mentions: [
+            { text: 'ممکن است بارش‌های سهمگین داشته باشیم/ همه آماده باشند؛ نباید غافلگیر شویم', date: '۲۱ شهریور ۱۴۰۵', channel: '@iribnews', keywords: ['وزیر نیرو'] },
+            { text: 'شبکه برق ایران به ۷ کشور همسایه متصل است', date: '۲۰ شهریور ۱۴۰۵', channel: '@tavanironline', keywords: ['برق','وزیر نیرو'] },
+            { text: 'برنامه‌های مهم وزارت نیرو برای توسعه برق‌آبی‌ها/ تلاش برای استفاده حداکثری از پدیده ال‌نینو', date: '۲۱ شهریور ۱۴۰۵', channel: '@niroonline', keywords: ['برق‌آبی','وزیر نیرو'] }
+        ]},
+        { name: 'محمدرضا عارف', role: 'معاون اول رئیس‌جمهور', count: 2, mentions: [
+            { text: 'تشکیل بلوک مقتدر اقتصادی و سیاسی اسلامی با رعایت شئون همسایگی', date: '۲۰ شهریور ۱۴۰۵', channel: '@iribnews', keywords: ['معاون اول'] }
+        ]},
+        { name: 'بهزاد برارزاده', role: 'مدیرعامل آبفای مازندران', count: 2, mentions: [
+            { text: 'بابلسر در مسیر توسعه خدمات فاضلاب؛ ظرفیت تصفیه‌خانه سه برابر می‌شود', date: '۲۱ شهریور ۱۴۰۵', channel: '@abfamaz', keywords: ['فاضلاب','تصفیه‌خانه'] }
+        ]},
+        { name: 'محمدرضا رمضان‌زاده', role: 'مدیر آبفای ورامین', count: 1, mentions: [
+            { text: 'عملیات امدادی و جایگزینی کابل برق برای چاه آب شرب روستایی در ورامین', date: '۲۰ شهریور ۱۴۰۵', channel: '@hamkaranabfa', keywords: ['چاه','روستا'] }
+        ]},
+        { name: 'محمد اله‌داد', role: 'مدیرعامل توانیر', count: 1, mentions: [
+            { text: 'قطع برق ادارات پرمصرف به نیمه دوم سال موکول شد', date: '۲۱ شهریور ۱۴۰۵', channel: '@tavanironline', keywords: ['برق','ادارات پرمصرف'] }
+        ]},
+    ]
+};
+
+async function fetchData() {
+    if (!API_URL) {
+        await new Promise(r => setTimeout(r, 300));
+        return SAMPLE_DATA;
+    }
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error('API error: ' + res.status);
+    return await res.json();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 61 — APPLY THEME / SPEED / FONT
+   ═══════════════════════════════════════════════════════════════════ */
+function applyTheme() {
+    document.documentElement.setAttribute('data-theme', State.theme);
+    document.querySelectorAll('.color-swatch').forEach(s => {
+        s.classList.toggle('active', s.dataset.color === State.theme);
+    });
+}
+function applySpeed() {
+    document.documentElement.setAttribute('data-speed', State.speed);
+    document.querySelectorAll('#speedPills .radio-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.speed === State.speed);
+    });
+}
+function applyFont() {
+    document.documentElement.setAttribute('data-font', State.fontSize);
+    document.querySelectorAll('#fontPills .radio-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.font === State.fontSize);
+    });
+}
+applyTheme();
+applySpeed();
+applyFont();
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 62 — RENDER — KPI
+   ═══════════════════════════════════════════════════════════════════ */
+function renderKPI(data) {
+    const vals = [data.total, data.channels.length, data.water, data.energy];
+    document.querySelectorAll('#kpiGrid .kpi-value').forEach((el, i) => {
+        if (vals[i] !== undefined) animateNumber(el, vals[i]);
+    });
+    document.getElementById('heroRange').textContent =
+        `${toFa(data.total)} مچ · ${toFa(data.channels.length)} کانال`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 63 — RENDER — ROWS
+   ═══════════════════════════════════════════════════════════════════ */
+function channelRowHTML(ch) {
+    const initials = (ch.name || ch.username).slice(0, 2);
+    const grad = avatarGradient(ch.username || ch.name);
+    const notif = Math.random() > 0.75 ? '<span class="notif-dot"></span>' : '';
+    return `<div class="row" data-channel="${escapeHtml(ch.username)}">
+        <div class="row-avatar" style="background:${grad}">${escapeHtml(initials)}</div>
+        <div class="row-body">
+            <div class="row-title">${escapeHtml(ch.name)}</div>
+            <div class="row-sub">@${escapeHtml(ch.username)} ${notif}</div>
+        </div>
+        <div class="row-badge">${toFa(ch.count)}</div>
+        <div class="row-arrow">‹</div>
+    </div>`;
+}
+
+function messageRowHTML(m) {
+    const tags = (m.keywords || []).slice(0, 3).map(k => {
+        const cls = k.includes('برق') ? 'energy' : (k.includes('آب') || k.includes('فاضلاب')) ? 'water' : 'violet';
+        return `<span class="tag ${cls}">${escapeHtml(k)}</span>`;
+    }).join('');
+    return `<div class="row" data-msg-id="${m._id}">
+        <div class="row-body">
+            <div class="row-sub" style="margin-bottom:6px;">📡 ${escapeHtml(m.channelName || m.channel || '')} · ${escapeHtml(m.date || '')}</div>
+            <div class="row-preview">${escapeHtml(m.text)}</div>
+            <div class="msg-tags">${tags}</div>
+        </div>
+    </div>`;
+}
+
+function personRowHTML(p, i) {
+    const grad = avatarGradient(p.name);
+    return `<div class="row" data-person-idx="${i}">
+        <div class="row-avatar" style="background:${grad}">${escapeHtml(p.name.slice(0, 2))}</div>
+        <div class="row-body">
+            <div class="row-title">${escapeHtml(p.name)}</div>
+            <div class="row-sub">${escapeHtml(p.role || '')}</div>
+        </div>
+        <div class="row-badge">${toFa(p.count)}</div>
+        <div class="row-arrow">‹</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 64 — SORT
+   ═══════════════════════════════════════════════════════════════════ */
+function sortChannels(list, mode) {
+    const c = [...list];
+    if (mode === 'count_asc') return c.sort((a, b) => a.count - b.count);
+    if (mode === 'name_asc') return c.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fa'));
+    return c.sort((a, b) => b.count - a.count);
+}
+function sortMessages(list, mode) {
+    const c = [...list];
+    if (mode === 'oldest') return c.reverse();
+    if (mode === 'keywords') return c.sort((a, b) => (b.keywords?.length || 0) - (a.keywords?.length || 0));
+    return c;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 65 — MASTER RENDER
+   ═══════════════════════════════════════════════════════════════════ */
+function renderAll(data) {
+    State.data = data;
+
+    renderKPI(data);
+
+    const sortedCh = sortChannels(data.channels, State.sortChannels);
+    document.getElementById('allChannelsList').innerHTML = sortedCh.map(channelRowHTML).join('');
+    document.getElementById('channelsCountLabel').textContent = toFa(data.channels.length) + ' کانال';
+    document.getElementById('topChannelsList').innerHTML = sortedCh.slice(0, 3).map(channelRowHTML).join('');
+
+    document.getElementById('personsList').innerHTML = data.persons.map(personRowHTML).join('');
+
+    const allMsgs = [];
+    data.channels.forEach(ch => (ch.messages || []).forEach(m => {
+        allMsgs.push({ ...m, channelName: ch.name, channel: '@' + ch.username, _id: `${ch.username}-${allMsgs.length}` });
+    }));
+    State.allMessages = allMsgs;
+
+    const sortedMsg = sortMessages(allMsgs, State.sortMessages);
+    document.getElementById('allMessagesList').innerHTML = sortedMsg.map(messageRowHTML).join('');
+    document.getElementById('messagesCountLabel').textContent = toFa(allMsgs.length) + ' پیام';
+    document.getElementById('recentMessagesList').innerHTML = sortedMsg.slice(0, 3).map(messageRowHTML).join('');
+
+    document.getElementById('systemInfo').innerHTML = `
+        ${infoRow('📡', 'کانال‌ها', toFa(data.channels.length))}
+        ${infoRow('🎯', 'کل مچ‌ها', toFa(data.total))}
+        ${infoRow('💧', 'آب و فاضلاب', toFa(data.water))}
+        ${infoRow('⚡', 'برق و انرژی', toFa(data.energy))}
+        ${infoRow('👥', 'مقامات', toFa(data.persons.length))}
+    `;
+
+    renderCatChart(data.categories);
+    renderDayChart(data.daily);
+    renderPersonChart(data.persons);
+    renderRatioChart(data);
+    renderHourlyChart(data.hourly);
+    renderTopKeywords(data);
+    renderTrendAnalysis(data);
+
+    renderHeatmap(data);
+    renderTimeline(data);
+    renderWordCloud(data);
+    renderAlerts(data);
+    renderBookmarks();
+
+    document.getElementById('statusLabel').textContent = `${toFa(data.total)} مچ`;
+    document.getElementById('liveBarText').textContent = `آخرین بروزرسانی: ${formatTime()}`;
+    document.getElementById('heatmapTotal').textContent = toFa(data.total);
+
+    attachHandlers();
+}
+
+function infoRow(icon, label, val) {
+    return `<div style="display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border-1);">
+        <span style="color:var(--muted);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>${icon}</span>${label}</span>
+        <span style="font-weight:800;font-size:14px;">${val}</span>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 66 — CHARTS
+   ═══════════════════════════════════════════════════════════════════ */
+function renderCatChart(cats) {
+    const c = document.getElementById('catChart');
+    if (!c) return;
+    if (State.charts.cat) State.charts.cat.destroy();
+    const colors = ['#C9A96E', '#4A9EFF', '#FFB84D', '#6EE7D4', '#B794F6', '#E11D48', '#84CC16', '#06B6D4'];
+    State.charts.cat = new Chart(c, {
+        type: 'doughnut',
+        data: {
+            labels: cats.map(x => x.name),
+            datasets: [{ data: cats.map(x => x.count), backgroundColor: colors, borderWidth: 0, hoverOffset: 12 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '68%',
+            animation: { animateRotate: true, animateScale: true, duration: 1600, easing: 'easeOutQuart' },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#8A8070', font: { family: 'Vazirmatn', size: 10.5, weight: '600' }, boxWidth: 8, boxHeight: 8, padding: 8, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: {
+                    rtl: true, textDirection: 'rtl',
+                    backgroundColor: '#16161F', titleColor: '#C9A96E', bodyColor: '#E8E8F0',
+                    borderColor: 'rgba(201,169,110,0.3)', borderWidth: 1,
+                    padding: 12, cornerRadius: 12, displayColors: false,
+                    titleFont: { family: 'Vazirmatn', size: 12 }, bodyFont: { family: 'Vazirmatn', size: 12 }
+                }
+            }
+        }
+    });
+}
+
+function renderDayChart(daily) {
+    const c = document.getElementById('dayChart');
+    if (!c) return;
+    if (State.charts.day) State.charts.day.destroy();
+    const ctx = c.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 200);
+    grad.addColorStop(0, 'rgba(201,169,110,0.45)');
+    grad.addColorStop(1, 'rgba(201,169,110,0.01)');
+    State.charts.day = new Chart(c, {
+        type: 'line',
+        data: {
+            labels: daily.map(d => d.date),
+            datasets: [{
+                data: daily.map(d => d.count),
+                borderColor: '#A88B4F', backgroundColor: grad,
+                tension: 0.4, fill: true, borderWidth: 2.5,
+                pointBackgroundColor: '#C9A96E',
+                pointBorderColor: '#16161F',
+                pointBorderWidth: 3,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 1800, easing: 'easeOutQuart', delay: ctx => ctx.dataIndex * 80 },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    rtl: true, backgroundColor: '#16161F', titleColor: '#C9A96E', bodyColor: '#E8E8F0',
+                    borderColor: 'rgba(201,169,110,0.3)', borderWidth: 1,
+                    padding: 12, cornerRadius: 12, displayColors: false,
+                    titleFont: { family: 'Vazirmatn', size: 12 }, bodyFont: { family: 'Vazirmatn', size: 12 }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#707085', font: { family: 'Vazirmatn', size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#707085', font: { family: 'Vazirmatn', size: 10 } }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderPersonChart(persons) {
+    const c = document.getElementById('personChart');
+    if (!c) return;
+    if (State.charts.person) State.charts.person.destroy();
+    State.charts.person = new Chart(c, {
+        type: 'bar',
+        data: {
+            labels: persons.map(p => p.name),
+            datasets: [{
+                data: persons.map(p => p.count),
+                backgroundColor: (ctx) => {
+                    const { ctx: cx, chartArea } = ctx.chart;
+                    if (!chartArea) return 'rgba(201,169,110,0.85)';
+                    const g = cx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                    g.addColorStop(0, 'rgba(183,148,246,0.9)');
+                    g.addColorStop(1, 'rgba(201,169,110,0.9)');
+                    return g;
+                },
+                borderRadius: 10, borderSkipped: false, barThickness: 20
+            }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            animation: { duration: 1600, easing: 'easeOutQuart', delay: ctx => ctx.dataIndex * 90 },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    rtl: true, backgroundColor: '#16161F', titleColor: '#C9A96E', bodyColor: '#E8E8F0',
+                    borderColor: 'rgba(201,169,110,0.3)', borderWidth: 1,
+                    padding: 12, cornerRadius: 12, displayColors: false,
+                    titleFont: { family: 'Vazirmatn', size: 12 }, bodyFont: { family: 'Vazirmatn', size: 12 }
+                }
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { color: '#707085', font: { family: 'Vazirmatn', size: 10.5 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#E8E8F0', font: { family: 'Vazirmatn', size: 10.5, weight: '700' } }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderRatioChart(data) {
+    const c = document.getElementById('ratioChart');
+    if (!c) return;
+    if (State.charts.ratio) State.charts.ratio.destroy();
+    State.charts.ratio = new Chart(c, {
+        type: 'doughnut',
+        data: {
+            labels: ['آب و فاضلاب', 'برق و انرژی'],
+            datasets: [{ data: [data.water, data.energy], backgroundColor: ['#4A9EFF', '#FFB84D'], borderWidth: 0, hoverOffset: 12 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '70%',
+            animation: { duration: 1400 },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#8A8070', font: { family: 'Vazirmatn', size: 10.5, weight: '600' }, boxWidth: 8, boxHeight: 8, padding: 8, usePointStyle: true, pointStyle: 'circle' }
+                },
+                tooltip: { rtl: true, backgroundColor: '#16161F', titleColor: '#C9A96E', bodyColor: '#E8E8F0', displayColors: false, padding: 12, cornerRadius: 12 }
+            }
+        }
+    });
+
+    const total = data.water + data.energy;
+    const wPct = total ? ((data.water / total) * 100).toFixed(1) : 0;
+    const ePct = total ? ((data.energy / total) * 100).toFixed(1) : 0;
+    document.getElementById('ratioBars').innerHTML = `
+        <div class="mini-bar"><span class="mini-bar-label">💧 آب</span><div class="mini-bar-track"><div class="mini-bar-fill" data-w="${wPct}" style="background:linear-gradient(90deg,#2B6FDB,#4A9EFF)"></div></div><span class="mini-bar-value">${toFa(wPct)}%</span></div>
+        <div class="mini-bar"><span class="mini-bar-label">⚡ برق</span><div class="mini-bar-track"><div class="mini-bar-fill" data-w="${ePct}" style="background:linear-gradient(90deg,#FF7B2C,#FFB84D)"></div></div><span class="mini-bar-value">${toFa(ePct)}%</span></div>
+    `;
+    setTimeout(() => {
+        document.querySelectorAll('#ratioBars .mini-bar-fill').forEach(el => {
+            el.style.width = el.dataset.w + '%';
+        });
+    }, 200);
+}
+
+function renderHourlyChart(hourly) {
+    const c = document.getElementById('hourlyChart');
+    if (!c) return;
+    if (State.charts.hourly) State.charts.hourly.destroy();
+    State.charts.hourly = new Chart(c, {
+        type: 'bar',
+        data: {
+            labels: Array.from({ length: 24 }, (_, i) => toFa(i) + ':۰۰'),
+            datasets: [{ data: hourly, backgroundColor: 'rgba(201,169,110,0.7)', borderRadius: 6, borderSkipped: false }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 1400, easing: 'easeOutQuart', delay: ctx => ctx.dataIndex * 20 },
+            plugins: {
+                legend: { display: false },
+                tooltip: { rtl: true, backgroundColor: '#16161F', titleColor: '#C9A96E', bodyColor: '#E8E8F0', displayColors: false, padding: 10, cornerRadius: 10 }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#707085', font: { family: 'Vazirmatn', size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#707085', font: { family: 'Vazirmatn', size: 8 }, autoSkip: true, maxTicksLimit: 8 }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+function renderTopKeywords(data) {
+    const counts = {};
+    data.channels.forEach(ch => (ch.messages || []).forEach(m => (m.keywords || []).forEach(k => counts[k] = (counts[k] || 0) + 1)));
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const max = sorted[0]?.[1] || 1;
+    document.getElementById('topKeywords').innerHTML = sorted.map(([k, v]) =>
+        `<div class="mini-bar"><span class="mini-bar-label">${escapeHtml(k)}</span><div class="mini-bar-track"><div class="mini-bar-fill" data-w="${(v / max) * 100}"></div></div><span class="mini-bar-value">${toFa(v)}</span></div>`
+    ).join('');
+    setTimeout(() => {
+        document.querySelectorAll('#topKeywords .mini-bar-fill').forEach(el => {
+            el.style.width = el.dataset.w + '%';
+        });
+    }, 200);
+}
+
+function renderTrendAnalysis(data) {
+    const daily = data.daily;
+    const last = daily[daily.length - 1]?.count || 0;
+    const prev = daily[daily.length - 2]?.count || 0;
+    const diff = last - prev;
+    const pct = prev ? ((diff / prev) * 100).toFixed(1) : 0;
+    const avg = Math.round(daily.reduce((s, d) => s + d.count, 0) / daily.length);
+    const max = Math.max(...daily.map(d => d.count));
+
+    document.getElementById('trendAnalysis').innerHTML = `
+        ${infoRow('📈', 'مقایسه با روز قبل', `<span style="color:${diff >= 0 ? 'var(--mint)' : 'var(--rose)'}">${diff >= 0 ? '▲' : '▼'} ${toFa(Math.abs(pct))}%</span>`)}
+        ${infoRow('📊', 'میانگین روزانه', toFa(avg))}
+        ${infoRow('🔥', 'پیک فعالیت', toFa(max))}
+        ${infoRow('📅', 'تعداد روزها', toFa(daily.length))}
+    `;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 67 — HEATMAP
+   ═══════════════════════════════════════════════════════════════════ */
+function renderHeatmap(data) {
+    const grid = document.getElementById('heatmapGrid');
+    if (!grid) return;
+    const total = 35;
+    const counts = data.daily.map(d => d.count);
+    const max = Math.max(...counts, 1);
+    let html = '';
+    for (let i = 0; i < total; i++) {
+        const c = counts[i % counts.length] || 0;
+        const lvl = c === 0 ? '' : c < max * 0.25 ? 'l1' : c < max * 0.5 ? 'l2' : c < max * 0.75 ? 'l3' : 'l4';
+        html += `<div class="heat-cell ${lvl}" title="${toFa(c)} مچ"></div>`;
+    }
+    grid.innerHTML = html;
+
+    const topDays = [...data.daily].sort((a, b) => b.count - a.count).slice(0, 5);
+    document.getElementById('topDaysList').innerHTML = topDays.map((d, i) => `
+        <div class="row">
+            <div class="row-avatar" style="background:${avatarGradient(d.date)}">${toFa(i + 1)}</div>
+            <div class="row-body">
+                <div class="row-title">${escapeHtml(d.date)}</div>
+                <div class="row-sub">${toFa(d.count)} پیام مچ‌شده</div>
+            </div>
+            <div class="row-badge">🔥</div>
+        </div>
+    `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 68 — TIMELINE
+   ═══════════════════════════════════════════════════════════════════ */
+function renderTimeline(data) {
+    const wrap = document.getElementById('timelineList');
+    if (!wrap) return;
+    const events = [];
+    data.channels.forEach(ch => {
+        (ch.messages || []).slice(0, 2).forEach(m => {
+            events.push({ date: m.date, title: ch.name, text: m.text });
+        });
+    });
+    wrap.innerHTML = events.slice(0, 8).map(e => `
+        <div class="tl-item">
+            <div class="tl-date">${escapeHtml(e.date)}</div>
+            <div class="tl-title">${escapeHtml(e.title)}</div>
+            <div class="tl-sub">${escapeHtml((e.text || '').slice(0, 100))}${e.text?.length > 100 ? '…' : ''}</div>
+        </div>
+    `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 69 — WORD CLOUD
+   ═══════════════════════════════════════════════════════════════════ */
+function renderWordCloud(data) {
+    const wrap = document.getElementById('wordCloud');
+    if (!wrap) return;
+    const counts = {};
+    data.channels.forEach(ch => (ch.messages || []).forEach(m => (m.keywords || []).forEach(k => counts[k] = (counts[k] || 0) + 1)));
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
+    if (!sorted.length) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">☁️</div><div class="empty-title">کلمه‌ای نیست</div></div>';
+        return;
+    }
+    wrap.innerHTML = sorted.map(([k, v], i) => {
+        const size = i < 2 ? 's1' : i < 5 ? 's2' : i < 9 ? 's3' : i < 14 ? 's4' : i < 18 ? 's5' : 's6';
+        return `<span class="word ${size}" data-word="${escapeHtml(k)}">${escapeHtml(k)}</span>`;
+    }).join('');
+    wrap.querySelectorAll('.word').forEach(w => {
+        w.onclick = () => {
+            Haptic.selection();
+            const q = w.dataset.word;
+            switchView('messages');
+            document.getElementById('searchMessages').value = q;
+            document.getElementById('searchMessages').dispatchEvent(new Event('input'));
+            showToast(`🔍 جستجو: ${q}`);
+        };
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 70 — ALERTS
+   ═══════════════════════════════════════════════════════════════════ */
+function generateAlerts(data) {
+    const alerts = [];
+    const recent = data.daily[data.daily.length - 1]?.count || 0;
+    const prev = data.daily[data.daily.length - 2]?.count || 0;
+    if (recent > prev * 1.5) {
+        alerts.push({ type: 'warn', icon: '📈', title: 'افزایش شدید مچ‌ها', text: `امروز ${toFa(recent)} مچ ثبت شد که ${toFa(Math.round((recent / prev - 1) * 100))}٪ بیشتر از دیروز است`, time: 'چند دقیقه پیش' });
+    }
+    if (data.water > data.energy * 5) {
+        alerts.push({ type: 'info', icon: '💧', title: 'غلبه اخبار آب', text: `اخبار آب و فاضلاب ${toFa(Math.round(data.water / data.energy))} برابر اخبار برق است`, time: '۵ دقیقه پیش' });
+    }
+    alerts.push({ type: 'success', icon: '✅', title: 'پایش فعال است', text: `${toFa(data.channels.length)} کانال در حال پایش هستند`, time: 'همین حالا' });
+    alerts.push({ type: 'info', icon: '🔔', title: 'به‌روزرسانی سیستم', text: 'نسخه ۶.۰ با قابلیت‌های جدید منتشر شد', time: '۱ ساعت پیش' });
+    return alerts;
+}
+
+function renderAlerts(data) {
+    State.alerts = generateAlerts(data);
+    document.getElementById('alertsBadge').textContent = toFa(State.alerts.length);
+    document.getElementById('alertsList').innerHTML = State.alerts.map(a => `
+        <div class="alert-card ${a.type}">
+            <div class="alert-icon">${a.icon}</div>
+            <div class="alert-body">
+                <div class="alert-title">${escapeHtml(a.title)}</div>
+                <div class="alert-text">${escapeHtml(a.text)}</div>
+                <div class="alert-time">${escapeHtml(a.time)}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 71 — BOOKMARKS
+   ═══════════════════════════════════════════════════════════════════ */
+function toggleBookmark(msgId) {
+    const idx = State.bookmarks.indexOf(msgId);
+    if (idx >= 0) {
+        State.bookmarks.splice(idx, 1);
+        showToast('⭐ از نشان‌شده‌ها حذف شد', 'info');
+    } else {
+        State.bookmarks.push(msgId);
+        showToast('⭐ به نشان‌شده‌ها اضافه شد', 'success');
+        launchConfetti(15);
+    }
+    localStorage.setItem('bookmarks', JSON.stringify(State.bookmarks));
+    renderBookmarks();
+    Haptic.notify('success');
+}
+
+function renderBookmarks() {
+    const wrap = document.getElementById('bookmarksList');
+    if (!wrap) return;
+    document.getElementById('bookmarksCount').textContent = toFa(State.bookmarks.length);
+    if (!State.bookmarks.length) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">⭐</div><div class="empty-title">هنوز چیزی نشان نکردی</div><div class="empty-text">روی پیام‌ها نگه دار و «نشان کردن» را بزن</div></div>';
+        return;
+    }
+    const msgs = State.allMessages.filter(m => State.bookmarks.includes(m._id));
+    wrap.innerHTML = msgs.map(m => `
+        <div class="bookmark-row">
+            <span class="bookmark-star">⭐</span>
+            <div style="flex:1;min-width:0;">
+                <div class="row-sub" style="margin-bottom:4px;">📡 ${escapeHtml(m.channelName || '')} · ${escapeHtml(m.date || '')}</div>
+                <div style="font-size:12.5px;line-height:1.7;color:var(--fg-soft);">${escapeHtml((m.text || '').slice(0, 120))}${m.text?.length > 120 ? '…' : ''}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 72 — HANDLERS
+   ═══════════════════════════════════════════════════════════════════ */
+function attachHandlers() {
+    document.querySelectorAll('[data-channel]').forEach(el => {
+        el.onclick = () => openChannelModal(el.dataset.channel);
+        attachLongPress(el, () => showContextMenu(el, [
+            { icon: '📖', label: 'مشاهده جزئیات', action: () => openChannelModal(el.dataset.channel) },
+            { icon: '⭐', label: 'نشان کردن', action: () => showToast('⭐ نشان شد') },
+            { icon: '📤', label: 'اشتراک‌گذاری', action: () => shareContent(`https://ble.ir/${el.dataset.channel}`) },
+        ]));
+    });
+    document.querySelectorAll('[data-person-idx]').forEach(el => {
+        el.onclick = () => openPersonModal(+el.dataset.personIdx);
+    });
+    document.querySelectorAll('[data-msg-id]').forEach(el => {
+        el.onclick = () => {
+            const m = State.allMessages.find(x => x._id === el.dataset.msgId);
+            if (m) openMessageModal(m);
+        };
+        attachLongPress(el, () => {
+            const msgId = el.dataset.msgId;
+            const isBookmarked = State.bookmarks.includes(msgId);
+            showContextMenu(el, [
+                { icon: '📖', label: 'مشاهده کامل', action: () => openMessageModal(State.allMessages.find(x => x._id === msgId)) },
+                { icon: isBookmarked ? '☆' : '⭐', label: isBookmarked ? 'حذف نشان' : 'نشان کردن', action: () => toggleBookmark(msgId) },
+                { icon: '📋', label: 'کپی متن', action: () => copyToClipboard(State.allMessages.find(x => x._id === msgId)?.text || '') },
+                { icon: '📤', label: 'اشتراک‌گذاری', action: () => shareContent(State.allMessages.find(x => x._id === msgId)?.text || '') },
+            ]);
+        });
+    });
+}
+
+function attachLongPress(el, callback) {
+    let timer;
+    el.addEventListener('touchstart', () => { timer = setTimeout(() => { callback(); Haptic.impact('medium'); }, 550); }, { passive: true });
+    el.addEventListener('touchend', () => clearTimeout(timer));
+    el.addEventListener('touchmove', () => clearTimeout(timer));
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 73 — NAV
+   ═══════════════════════════════════════════════════════════════════ */
+function switchView(name) {
+    Haptic.selection();
+    document.querySelectorAll('.page-view').forEach(p => p.classList.toggle('active', p.dataset.page === name));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelectorAll('.page-view.active .reveal').forEach(el => el.classList.add('visible'));
+}
+document.querySelectorAll('.nav-btn').forEach(b => {
+    b.onclick = () => switchView(b.dataset.nav);
+});
+document.querySelectorAll('[data-nav]').forEach(el => {
+    if (el.classList.contains('nav-btn')) return;
+    el.onclick = () => switchView(el.dataset.nav);
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 74 — MODAL
+   ═══════════════════════════════════════════════════════════════════ */
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalSheet = document.getElementById('modalSheet');
+const sheetHeader = document.getElementById('sheetHeader');
+const sheetBody = document.getElementById('sheetBody');
+
+function openModal() {
+    Haptic.impact('medium');
+    modalBackdrop.classList.add('active');
+    modalSheet.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (tg?.BackButton) tg.BackButton.show();
+}
+function closeModal() {
+    Haptic.impact('light');
+    modalBackdrop.classList.remove('active');
+    modalSheet.classList.remove('active');
+    document.body.style.overflow = '';
+    if (tg?.BackButton) tg.BackButton.hide();
+}
+modalBackdrop.onclick = closeModal;
+if (tg?.BackButton) tg.BackButton.onClick(closeModal);
+
+function openChannelModal(username) {
+    const ch = State.data.channels.find(c => c.username === username);
+    if (!ch) return;
+    const grad = avatarGradient(username);
+    sheetHeader.innerHTML = `
+        <button class="sheet-close" onclick="closeModal()">✕</button>
+        <div class="sheet-header-top">
+            <div class="sheet-avatar" style="background:${grad}">${escapeHtml((ch.name || username).slice(0, 2))}</div>
+            <div class="sheet-head-body">
+                <div class="sheet-title">${escapeHtml(ch.name)}</div>
+                <div class="sheet-subtitle"><span>@${escapeHtml(username)}</span><span>•</span><span>${toFa(ch.count)} مچ</span></div>
+            </div>
+        </div>`;
+    const msgs = ch.messages || [];
+    const stats = `<div class="stat-grid">
+        <div class="stat-pill"><div class="stat-value">${toFa(ch.count)}</div><div class="stat-label">کل مچ</div></div>
+        <div class="stat-pill"><div class="stat-value water">${toFa(msgs.filter(m => m.type === 'water').length)}</div><div class="stat-label">آب</div></div>
+        <div class="stat-pill"><div class="stat-value energy">${toFa(msgs.filter(m => m.type === 'energy').length)}</div><div class="stat-label">برق</div></div>
+    </div>`;
+    const msgsHTML = msgs.length
+        ? msgs.map(m => fullMessageHTML(m)).join('')
+        : `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">پیامی نیست</div></div>`;
+    sheetBody.innerHTML = stats + msgsHTML +
+        `<a class="sheet-link" href="https://ble.ir/${escapeHtml(username)}" target="_blank">🔗 مشاهده کانال در بله</a>`;
+    openModal();
+}
+
+function openPersonModal(idx) {
+    const p = State.data.persons[idx];
+    if (!p) return;
+    const grad = avatarGradient(p.name);
+    sheetHeader.innerHTML = `
+        <button class="sheet-close" onclick="closeModal()">✕</button>
+        <div class="sheet-header-top">
+            <div class="sheet-avatar" style="background:${grad}">${escapeHtml(p.name.slice(0, 2))}</div>
+            <div class="sheet-head-body">
+                <div class="sheet-title">${escapeHtml(p.name)}</div>
+                <div class="sheet-subtitle"><span>${escapeHtml(p.role || '')}</span><span>•</span><span>${toFa(p.count)} اشاره</span></div>
+            </div>
+        </div>`;
+    const mentions = p.mentions || [];
+    const stats = `<div class="stat-grid">
+        <div class="stat-pill"><div class="stat-value">${toFa(p.count)}</div><div class="stat-label">اشاره</div></div>
+        <div class="stat-pill"><div class="stat-value">${toFa(mentions.length)}</div><div class="stat-label">پیام نمونه</div></div>
+        <div class="stat-pill"><div class="stat-value">${toFa(2)}</div><div class="stat-label">کانال</div></div>
+    </div>`;
+    const mHTML = mentions.length
+        ? mentions.map(m => fullMessageHTML(m, true)).join('')
+        : `<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">پیامی یافت نشد</div></div>`;
+    sheetBody.innerHTML = stats + mHTML;
+    openModal();
+}
+
+function openMessageModal(m) {
+    if (!m) return;
+    sheetHeader.innerHTML = `
+        <button class="sheet-close" onclick="closeModal()">✕</button>
+        <div class="sheet-header-top">
+            <div class="sheet-avatar" style="background:${avatarGradient(m.channelName || m.channel || '')}">📡</div>
+            <div class="sheet-head-body">
+                <div class="sheet-title">${escapeHtml(m.channelName || 'پیام')}</div>
+                <div class="sheet-subtitle"><span>${escapeHtml(m.channel || '')}</span><span>•</span><span>${escapeHtml(m.date || '')}</span></div>
+            </div>
+        </div>`;
+    const isBookmarked = State.bookmarks.includes(m._id);
+    sheetBody.innerHTML = fullMessageHTML(m) + `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+            <button class="sheet-link" onclick="toggleBookmark('${m._id}'); closeModal();">${isBookmarked ? '☆ حذف نشان' : '⭐ نشان کردن'}</button>
+            <button class="sheet-link" onclick="copyToClipboard(${JSON.stringify(m.text || '').replace(/"/g, '&quot;')})">📋 کپی</button>
+            <button class="sheet-link" onclick="shareContent(${JSON.stringify(m.text || '').replace(/"/g, '&quot;')})">📤 اشتراک</button>
+        </div>
+    `;
+    openModal();
+}
+
+function fullMessageHTML(m, showChannel = false) {
+    const tags = (m.keywords || []).map(k => {
+        const cls = k.includes('برق') ? 'energy' : (k.includes('آب') || k.includes('فاضلاب')) ? 'water' : 'violet';
+        return `<span class="tag ${cls}">${escapeHtml(k)}</span>`;
+    }).join('');
+    const ct = showChannel && m.channel ? `<span class="tag">📡 ${escapeHtml(m.channel)}</span>` : '';
+    return `<div class="msg-card">
+        <div class="msg-head"><span>${escapeHtml(m.channel || '')}</span><span>${escapeHtml(m.date || '')}</span></div>
+        <div class="msg-text">${escapeHtml(m.text || '')}</div>
+        <div class="msg-tags">${tags}${ct}</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 75 — CONTEXT MENU
+   ═══════════════════════════════════════════════════════════════════ */
+const contextMenu = document.getElementById('contextMenu');
+
+function showContextMenu(el, items) {
+    const rect = el.getBoundingClientRect();
+    contextMenu.innerHTML = items.map((it, i) =>
+        `<div class="context-item ${it.danger ? 'danger' : ''}" data-idx="${i}">${it.icon} ${escapeHtml(it.label)}</div>`
+    ).join('');
+    contextMenu.style.top = Math.min(rect.bottom + 6, window.innerHeight - 250) + 'px';
+    contextMenu.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
+    contextMenu.classList.add('active');
+    contextMenu.querySelectorAll('.context-item').forEach((ci, i) => {
+        ci.onclick = () => {
+            contextMenu.classList.remove('active');
+            setTimeout(() => items[i].action(), 100);
+        };
+    });
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.context-menu')) contextMenu.classList.remove('active');
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 76 — CLIPBOARD / SHARE
+   ═══════════════════════════════════════════════════════════════════ */
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('📋 کپی شد', 'success');
+            Haptic.notify('success');
+        });
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showToast('📋 کپی شد', 'success');
+    }
+}
+
+function shareContent(text) {
+    if (navigator.share) {
+        navigator.share({ text, url: 'https://sjdslri.github.io/miniapp-tel/' }).catch(() => {});
+    } else if (tg?.openTelegramLink) {
+        const url = `https://t.me/share/url?url=${encodeURIComponent('https://sjdslri.github.io/miniapp-tel/')}&text=${encodeURIComponent(text)}`;
+        tg.openTelegramLink(url);
+    } else {
+        copyToClipboard(text);
+        showToast('📋 متن کپی شد - می‌تونی به اشتراک بگذاری', 'info');
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 77 — FILTERS & SEARCH
+   ═══════════════════════════════════════════════════════════════════ */
+document.querySelectorAll('#chips .chip').forEach(c => {
+    c.onclick = () => {
+        Haptic.selection();
+        document.querySelectorAll('#chips .chip').forEach(x => x.classList.remove('active'));
+        c.classList.add('active');
+        State.filter = c.dataset.filter;
+        showToast(`فیلتر: ${c.textContent.trim()}`);
+    };
+});
+
+document.getElementById('sortChannels').onchange = (e) => {
+    State.sortChannels = e.target.value;
+    renderAll(State.data);
+    showToast('مرتب‌سازی اعمال شد');
+};
+document.getElementById('sortMessages').onchange = (e) => {
+    State.sortMessages = e.target.value;
+    renderAll(State.data);
+    showToast('مرتب‌سازی اعمال شد');
+};
+
+function attachSearch(inputId, listId) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    el.oninput = (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        document.querySelectorAll(`#${listId} .row`).forEach(r => {
+            r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    };
+}
+attachSearch('searchChannels', 'allChannelsList');
+attachSearch('searchMessages', 'allMessagesList');
+attachSearch('searchPersons', 'personsList');
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 78 — COMMAND PALETTE
+   ═══════════════════════════════════════════════════════════════════ */
+const cmdPalette = document.getElementById('cmdPalette');
+const cmdInput = document.getElementById('cmdInput');
+const cmdResults = document.getElementById('cmdResults');
+
+const COMMANDS = [
+    { icon: '🏠', title: 'نمای کلی', sub: 'صفحه اصلی', action: () => switchView('overview'), shortcut: '1' },
+    { icon: '📡', title: 'کانال‌ها', sub: 'همه کانال‌های پایش‌شده', action: () => switchView('channels'), shortcut: '2' },
+    { icon: '👤', title: 'مقامات', sub: 'لیست مقامات', action: () => switchView('persons'), shortcut: '3' },
+    { icon: '💬', title: 'پیام‌ها', sub: 'همه پیام‌های مچ‌شده', action: () => switchView('messages'), shortcut: '4' },
+    { icon: '📊', title: 'تحلیل عمیق', sub: 'نمودارهای تفصیلی', action: () => switchView('analytics'), shortcut: '5' },
+    { icon: '🔥', title: 'تقویم فعالیت', sub: 'Heatmap روزانه', action: () => switchView('heatmap') },
+    { icon: '📅', title: 'خط زمانی', sub: 'Timeline رویدادها', action: () => switchView('timeline') },
+    { icon: '☁️', title: 'ابر کلمات', sub: 'Word Cloud', action: () => switchView('wordcloud') },
+    { icon: '🔔', title: 'هشدارها', sub: 'Alert Center', action: () => switchView('alerts') },
+    { icon: '⭐', title: 'نشان‌شده‌ها', sub: 'Bookmarks', action: () => switchView('bookmarks') },
+    { icon: '🎨', title: 'تغییر پوسته', sub: 'رنگ طلایی/آبی/بنفش', action: () => cycleTheme() },
+    { icon: '🔄', title: 'بروزرسانی داده', sub: 'دریافت مجدد', action: () => refreshData(), shortcut: 'R' },
+    { icon: '📅', title: 'انتخاب بازه تاریخ', sub: 'فیلتر تاریخ شمسی', action: () => openDatePicker() },
+    { icon: '📥', title: 'خروجی CSV', sub: 'دانلود داده‌ها', action: () => exportData('csv') },
+    { icon: '🧾', title: 'خروجی JSON', sub: 'JSON خام', action: () => exportData('json') },
+    { icon: '🖨', title: 'چاپ / PDF', sub: 'چاپ صفحه', action: () => window.print() },
+    { icon: '📱', title: 'QR Code', sub: 'کد QR داشبورد', action: () => showQR() },
+    { icon: '🎓', title: 'آموزش', sub: 'شروع مجدد تور', action: () => startOnboarding() },
+];
+
+function openCmdPalette() {
+    cmdPalette.classList.add('active');
+    cmdInput.value = '';
+    renderCmdResults('');
+    setTimeout(() => cmdInput.focus(), 100);
+    Haptic.impact('light');
+}
+function closeCmdPalette() {
+    cmdPalette.classList.remove('active');
+}
+function renderCmdResults(q) {
+    const query = q.toLowerCase().trim();
+    let list = COMMANDS;
+    if (query) {
+        list = COMMANDS.filter(c =>
+            c.title.includes(query) ||
+            c.sub.includes(query) ||
+            c.title.toLowerCase().includes(query)
+        );
+    }
+    if (!list.length) list = COMMANDS.slice(0, 8);
+    cmdResults.innerHTML = list.map((c, i) => `
+        <div class="cmd-item ${i === 0 ? 'active' : ''}" data-cmd="${COMMANDS.indexOf(c)}">
+            <div class="cmd-item-icon">${c.icon}</div>
+            <div class="cmd-item-body">
+                <div class="cmd-item-title">${escapeHtml(c.title)}</div>
+                <div class="cmd-item-sub">${escapeHtml(c.sub)}</div>
+            </div>
+            ${c.shortcut ? `<span class="cmd-item-shortcut">${c.shortcut}</span>` : ''}
+        </div>
+    `).join('');
+    cmdResults.querySelectorAll('.cmd-item').forEach(el => {
+        el.onclick = () => {
+            const cmd = COMMANDS[+el.dataset.cmd];
+            if (cmd) { closeCmdPalette(); setTimeout(() => cmd.action(), 150); }
+        };
+    });
+}
+cmdInput.oninput = (e) => renderCmdResults(e.target.value);
+cmdInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+        const active = cmdResults.querySelector('.cmd-item.active');
+        if (active) active.click();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const items = [...cmdResults.querySelectorAll('.cmd-item')];
+        const cur = items.findIndex(i => i.classList.contains('active'));
+        items.forEach(i => i.classList.remove('active'));
+        let next = e.key === 'ArrowDown' ? cur + 1 : cur - 1;
+        if (next < 0) next = items.length - 1;
+        if (next >= items.length) next = 0;
+        items[next].classList.add('active');
+    }
+};
+cmdPalette.onclick = (e) => { if (e.target === cmdPalette) closeCmdPalette(); };
+document.getElementById('searchBtn').onclick = openCmdPalette;
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 79 — KEYBOARD SHORTCUTS
+   ═══════════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openCmdPalette();
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        refreshData();
+    } else if (e.key === 'Escape') {
+        if (cmdPalette.classList.contains('active')) closeCmdPalette();
+        else if (document.getElementById('datePicker').classList.contains('active')) closeDatePicker();
+        else if (document.getElementById('onboarding').classList.contains('active')) closeOnboarding();
+        else if (document.getElementById('qrOverlay').classList.contains('active')) closeQR();
+        else if (modalSheet.classList.contains('active')) closeModal();
+    } else if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.target.matches('input,textarea,select')) {
+        const map = { '1': 'overview', '2': 'channels', '3': 'persons', '4': 'messages', '5': 'analytics', '6': 'more' };
+        if (map[e.key]) switchView(map[e.key]);
+    }
+});
+
+function showShortcuts() {
+    sheetHeader.innerHTML = `
+        <button class="sheet-close" onclick="closeModal()">✕</button>
+        <div class="sheet-header-top">
+            <div class="sheet-avatar" style="background:linear-gradient(135deg,#B794F6,#7C3AED)">⌨️</div>
+            <div class="sheet-head-body">
+                <div class="sheet-title">میان‌برهای کیبورد</div>
+                <div class="sheet-subtitle">سریع‌تر کار کن</div>
+            </div>
+        </div>`;
+    const shortcuts = [
+        ['Ctrl + K', 'جستجوی سراسری'],
+        ['Ctrl + R', 'بروزرسانی داده'],
+        ['1 تا 6', 'تغییر تب'],
+        ['Esc', 'بستن پنل‌ها'],
+        ['Long Press', 'منوی راست‌کلیک'],
+    ];
+    sheetBody.innerHTML = shortcuts.map(([k, d]) =>
+        `<div class="msg-card"><div class="msg-head"><span style="font-family:monospace;">${k}</span><span>${d}</span></div></div>`
+    ).join('');
+    openModal();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 80 — THEME CYCLER
+   ═══════════════════════════════════════════════════════════════════ */
+const THEMES = ['gold', 'blue', 'violet', 'mint', 'rose'];
+function cycleTheme() {
+    const idx = THEMES.indexOf(State.theme);
+    State.theme = THEMES[(idx + 1) % THEMES.length];
+    localStorage.setItem('theme', State.theme);
+    applyTheme();
+    showToast(`🎨 پوسته: ${State.theme}`, 'info');
+    Haptic.selection();
+}
+document.getElementById('themeBtn').onclick = cycleTheme;
+
+document.querySelectorAll('.color-swatch').forEach(s => {
+    s.onclick = () => {
+        State.theme = s.dataset.color;
+        localStorage.setItem('theme', State.theme);
+        applyTheme();
+        Haptic.selection();
+        showToast(`🎨 پوسته: ${State.theme}`, 'info');
+    };
+});
+
+document.querySelectorAll('#speedPills .radio-pill').forEach(p => {
+    p.onclick = () => {
+        State.speed = p.dataset.speed;
+        localStorage.setItem('speed', State.speed);
+        applySpeed();
+        Haptic.selection();
+    };
+});
+
+document.querySelectorAll('#fontPills .radio-pill').forEach(p => {
+    p.onclick = () => {
+        State.fontSize = p.dataset.font;
+        localStorage.setItem('fontSize', State.fontSize);
+        applyFont();
+        Haptic.selection();
+    };
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 81 — DATE PICKER
+   ═══════════════════════════════════════════════════════════════════ */
+const datePicker = document.getElementById('datePicker');
+function openDatePicker() {
+    document.getElementById('dateFrom').value = State.dateRange.from;
+    document.getElementById('dateTo').value = State.dateRange.to;
+    datePicker.classList.add('active');
+    Haptic.impact('light');
+}
+function closeDatePicker() { datePicker.classList.remove('active'); }
+document.getElementById('dateCancel').onclick = closeDatePicker;
+document.getElementById('dateApply').onclick = () => {
+    const f = document.getElementById('dateFrom').value.trim();
+    const t = document.getElementById('dateTo').value.trim();
+    if (!f || !t) { showToast('❌ تاریخ نامعتبر', 'error'); return; }
+    State.dateRange = { from: f, to: t };
+    localStorage.setItem('dateFrom', f);
+    localStorage.setItem('dateTo', t);
+    document.getElementById('dateRangeLabel').textContent = f;
+    closeDatePicker();
+    showToast(`📅 بازه: ${f} تا ${t}`, 'success');
+    refreshData();
+};
+document.querySelectorAll('.date-preset').forEach(b => {
+    b.onclick = () => {
+        const toJalali = (d) => {
+            try {
+                return new Intl.DateTimeFormat('fa-IR-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d).replace(/\//g, '-');
+            } catch (e) { return '1405-06-21'; }
+        };
+        const r = b.dataset.range;
+        let from = new Date(), to = new Date();
+        if (r === 'week') from = new Date(Date.now() - 7 * 86400000);
+        else if (r === 'month') from = new Date(Date.now() - 30 * 86400000);
+        else if (r === 'year') from = new Date(Date.now() - 365 * 86400000);
+        document.getElementById('dateFrom').value = toJalali(from);
+        document.getElementById('dateTo').value = toJalali(to);
+    };
+});
+document.getElementById('rangePill').onclick = openDatePicker;
+datePicker.onclick = (e) => { if (e.target === datePicker) closeDatePicker(); };
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 82 — EXPORT
+   ═══════════════════════════════════════════════════════════════════ */
+document.getElementById('exportBtn').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('exportMenu').classList.toggle('active');
+    Haptic.impact('light');
+};
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#exportBtn')) document.getElementById('exportMenu').classList.remove('active');
+});
+document.querySelectorAll('.export-menu-item').forEach(el => {
+    el.onclick = () => {
+        document.getElementById('exportMenu').classList.remove('active');
+        exportData(el.dataset.export);
+    };
+});
+
+function exportData(type) {
+    if (!State.data) return showToast('❌ داده‌ای موجود نیست', 'error');
+    if (type === 'print') { window.print(); return; }
+    if (type === 'share') {
+        shareContent(`گزارش رصد هوشمند - ${toFa(State.data.total)} مچ ثبت‌شده`);
+        return;
+    }
+    let content, mime, ext;
+    if (type === 'csv') {
+        const rows = [['کانال', 'یوزرنیم', 'تاریخ', 'متن', 'کلیدواژه‌ها']];
+        State.data.channels.forEach(ch => (ch.messages || []).forEach(m =>
+            rows.push([ch.name, ch.username, m.date, (m.text || '').replace(/,/g, '،'), (m.keywords || []).join('|')])
+        ));
+        content = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+        mime = 'text/csv;charset=utf-8';
+        ext = 'csv';
+    } else {
+        content = JSON.stringify(State.data, null, 2);
+        mime = 'application/json';
+        ext = 'json';
+    }
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `monitor-${Date.now()}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`📥 خروجی ${ext.toUpperCase()} دانلود شد`, 'success');
+    Haptic.notify('success');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 83 — REFRESH
+   ═══════════════════════════════════════════════════════════════════ */
+async function refreshData() {
+    Haptic.impact('medium');
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+    try {
+        const data = await fetchData();
+        renderAll(data);
+        showToast('✓ داده‌ها بروزرسانی شد', 'success');
+        Haptic.notify('success');
+    } catch (e) {
+        showToast('❌ خطا در بروزرسانی', 'error');
+        Haptic.notify('error');
+    } finally {
+        setTimeout(() => btn.classList.remove('spinning'), 800);
+    }
+}
+document.getElementById('refreshBtn').onclick = refreshData;
+
+function toggleAutoRefresh() {
+    State.autoRefresh = !State.autoRefresh;
+    localStorage.setItem('autoRefresh', String(State.autoRefresh));
+    if (State.autoRefresh) {
+        startAutoRefresh();
+        showToast('✓ بروزرسانی خودکار فعال', 'success');
+    } else {
+        clearInterval(State.refreshTimer);
+        showToast('⏸ بروزرسانی خودکار غیرفعال', 'info');
+    }
+    const t = document.getElementById('autoRefreshToggle');
+    if (t) t.classList.toggle('on', State.autoRefresh);
+    Haptic.selection();
+}
+
+function startAutoRefresh() {
+    clearInterval(State.refreshTimer);
+    State.refreshTimer = setInterval(() => {
+        if (!document.hidden && State.autoRefresh) refreshData();
+    }, State.refreshInterval);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 84 — QR CODE
+   ═══════════════════════════════════════════════════════════════════ */
+function showQR() {
+    const overlay = document.getElementById('qrOverlay');
+    overlay.classList.add('active');
+    const canvas = document.getElementById('qrCanvas');
+    drawFakeQR(canvas, 'sjdslri.github.io/miniapp-tel');
+    document.getElementById('qrLabel').textContent = 'sjdslri.github.io/miniapp-tel';
+    Haptic.impact('light');
+}
+function closeQR() {
+    document.getElementById('qrOverlay').classList.remove('active');
+}
+document.getElementById('qrOverlay').onclick = (e) => {
+    if (e.target.id === 'qrOverlay') closeQR();
+};
+function drawFakeQR(canvas, text) {
+    const ctx = canvas.getContext('2d');
+    const size = 240;
+    const cells = 21;
+    const cell = size / cells;
+    canvas.width = size;
+    canvas.height = size;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#0A0A0F';
+    let h = 0;
+    for (const c of text) h = (h * 31 + c.charCodeAt(0)) | 0;
+    const rand = (i) => {
+        h = (h * 1103515245 + 12345) & 0x7fffffff;
+        return (h % 100) / 100;
+    };
+    for (let y = 0; y < cells; y++) {
+        for (let x = 0; x < cells; x++) {
+            const isCorner = (x < 7 && y < 7) || (x >= cells - 7 && y < 7) || (x < 7 && y >= cells - 7);
+            if (isCorner) {
+                const cx = x < 7 ? x : x - cells + 7;
+                const cy = y < 7 ? y : y - cells + 7;
+                const outer = cx === 0 || cx === 6 || cy === 0 || cy === 6;
+                const inner = cx >= 2 && cx <= 4 && cy >= 2 && cy <= 4;
+                if (outer || inner) ctx.fillRect(x * cell, y * cell, cell, cell);
+            } else if (rand(x * cells + y) > 0.5) {
+                ctx.fillRect(x * cell, y * cell, cell, cell);
+            }
+        }
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 85 — ONBOARDING TOUR
+   ═══════════════════════════════════════════════════════════════════ */
+const ONB_STEPS = [
+    { icon: '📊', title: 'خوش آمدید!', text: 'به داشبورد پایش هوشمند کانال‌های آب و انرژی خوش آمدید. این ابزار به شما کمک می‌کند محتوای خبری را در لحظه رصد کنید.' },
+    { icon: '🔍', title: 'جستجوی سراسری', text: 'با Ctrl+K می‌توانید به سرعت در همه بخش‌ها جستجو کنید و به تمام قابلیت‌ها دسترسی داشته باشید.' },
+    { icon: '🎨', title: 'سفارشی‌سازی', text: 'می‌توانید پوسته رنگی، سرعت انیمیشن و اندازه فونت را مطابق سلیقه خود تغییر دهید.' },
+    { icon: '⭐', title: 'نشان‌گذاری', text: 'روی پیام‌ها نگه دارید تا منوی راست‌کلیک باز شود. می‌توانید پیام‌ها را نشان کنید یا به اشتراک بگذارید.' },
+];
+
+function startOnboarding() {
+    State.onboardingStep = 0;
+    const onb = document.getElementById('onboarding');
+    onb.classList.add('active');
+    updateOnboarding();
+}
+function closeOnboarding() {
+    document.getElementById('onboarding').classList.remove('active');
+    localStorage.setItem('onbShown', 'true');
+    State.onboardingShown = true;
+}
+function updateOnboarding() {
+    const step = ONB_STEPS[State.onboardingStep];
+    document.getElementById('onbIcon').textContent = step.icon;
+    document.getElementById('onbTitle').textContent = step.title;
+    document.getElementById('onbText').textContent = step.text;
+    document.getElementById('onbDots').innerHTML = ONB_STEPS.map((_, i) =>
+        `<div class="onb-dot ${i === State.onboardingStep ? 'active' : ''}"></div>`
+    ).join('');
+    document.getElementById('onbNext').textContent = State.onboardingStep === ONB_STEPS.length - 1 ? 'شروع کن!' : 'بعدی';
+}
+document.getElementById('onbNext').onclick = () => {
+    Haptic.selection();
+    State.onboardingStep++;
+    if (State.onboardingStep >= ONB_STEPS.length) {
+        closeOnboarding();
+        launchConfetti(30);
+    } else {
+        updateOnboarding();
+    }
+};
+document.getElementById('onbSkip').onclick = () => {
+    Haptic.impact('light');
+    closeOnboarding();
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 86 — INIT
+   ═══════════════════════════════════════════════════════════════════ */
+(async () => {
+    try {
+        document.getElementById('dateRangeLabel').textContent = State.dateRange.from;
+        const t = document.getElementById('autoRefreshToggle');
+        if (t) t.classList.toggle('on', State.autoRefresh);
+
+        const data = await fetchData();
+        renderAll(data);
+        if (State.autoRefresh) startAutoRefresh();
+
+        setTimeout(() => {
+            document.querySelectorAll('.reveal').forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('visible');
+            });
+        }, 200);
+    } catch (e) {
+        console.error(e);
+        showToast('❌ خطا در بارگذاری داده', 'error');
+    }
+})();
+
+/* Expose for inline handlers */
+window.closeModal = closeModal;
+window.closeQR = closeQR;
+window.switchView = switchView;
+window.openDatePicker = openDatePicker;
+window.toggleAutoRefresh = toggleAutoRefresh;
+window.showShortcuts = showShortcuts;
+window.showQR = showQR;
+window.startOnboarding = startOnboarding;
+window.toggleBookmark = toggleBookmark;
+window.copyToClipboard = copyToClipboard;
+window.shareContent = shareContent;
+window.showToast = showToast;
+</script>
 
 </body>
 </html>
