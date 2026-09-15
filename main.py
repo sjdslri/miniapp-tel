@@ -31,15 +31,27 @@ from supabase import create_client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 print(">>> Supabase client created OK")
 
+@app.head("/")
+def root_head():
+    return {}
+
 
 @app.get("/")
 def root():
     return {"status": "ok", "message": "Monitor API v4", "backend": "supabase", "version": 4}
 
+@app.get("/health")
+def root_head():
+    return {}
+
 
 @app.get("/health")
 def health():
     return {"status": "healthy", "version": 4}
+
+@app.get("/api/dashboard")
+def root_head():
+    return {}
 
 
 @app.get("/api/dashboard")
