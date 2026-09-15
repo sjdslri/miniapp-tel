@@ -430,7 +430,7 @@ body::after {
 }
 
 .preloader-counter {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 76px;
     font-weight: 300;
     line-height: 1;
@@ -499,7 +499,7 @@ body::after {
 }
 
 .preloader-sub {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 11px;
     color: var(--muted);
     letter-spacing: 10px;
@@ -837,9 +837,9 @@ body::after {
 @keyframes lineGrow { to { transform: scaleX(1); } }
 
 .hero h1 {
-    font-family: 'Cormorant Garamond', 'Vazirmatn', serif;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
     font-size: 44px;
-    font-weight: 300;
+    font-weight: 800;
     line-height: 1.05;
     letter-spacing: -1.5px;
     margin-bottom: 14px;
@@ -859,8 +859,8 @@ body::after {
 
 .hero h1 .accent {
     color: var(--accent);
-    font-weight: 600;
-    font-style: italic;
+    font-weight: 900;
+    font-style: normal;
     position: relative;
     display: inline-block;
 }
@@ -943,7 +943,7 @@ body::after {
     position: absolute;
     top: 24px;
     left: 24px;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 11px;
     letter-spacing: 5px;
     color: var(--accent);
@@ -1014,7 +1014,7 @@ body::after {
     animation: marqueeScroll calc(45s * var(--speed)) linear infinite;
 }
 .marquee-track span {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 17px;
     font-weight: 300;
     color: var(--accent);
@@ -1134,7 +1134,7 @@ body::after {
 }
 
 .kpi-value {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 36px;
     font-weight: 600;
     line-height: 1;
@@ -1718,7 +1718,7 @@ body::after {
 }
 .sheet-head-body { flex: 1; min-width: 0; }
 .sheet-title {
-    font-family: 'Cormorant Garamond', 'Vazirmatn', serif;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
     font-size: 22px;
     font-weight: 600;
     letter-spacing: -0.5px;
@@ -1785,7 +1785,7 @@ body::after {
     text-align: center;
 }
 .stat-value {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 22px;
     font-weight: 700;
     line-height: 1;
@@ -2060,7 +2060,7 @@ body::after {
 .date-picker.active .date-box { transform: scale(1); }
 
 .date-title {
-    font-family: 'Cormorant Garamond', 'Vazirmatn', serif;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
     font-size: 22px;
     font-weight: 600;
     color: var(--accent);
@@ -2269,7 +2269,7 @@ body::after {
     min-height: 240px;
 }
 .word {
-    font-family: 'Cormorant Garamond', 'Vazirmatn', serif;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.4s var(--easing-bounce);
@@ -2410,7 +2410,7 @@ body::after {
     width: 0;
 }
 .mini-bar-value {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 13px;
     font-weight: 700;
     color: var(--accent);
@@ -2591,7 +2591,7 @@ body::after {
     box-shadow: 0 16px 40px -10px var(--accent-glow);
 }
 .onb-title {
-    font-family: 'Cormorant Garamond', 'Vazirmatn', serif;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
     font-size: 26px;
     font-weight: 600;
     color: var(--accent);
@@ -2819,7 +2819,7 @@ body::after {
     50%      { transform: translateY(-8px); }
 }
 .empty-title {
-    font-family: 'Cormorant Garamond', 'Vazirmatn', serif;
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
     font-size: 18px;
     font-weight: 600;
     color: var(--accent);
@@ -2862,7 +2862,7 @@ body::after {
     animation: shimmer calc(4s * var(--speed)) ease-in-out infinite;
 }
 .about-name {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 26px;
     font-weight: 700;
     color: var(--accent);
@@ -2884,6 +2884,125 @@ body::after {
     line-height: 1.8;
     max-width: 280px;
     margin: 0 auto;
+}
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 42.5 — REPORT RANGE BANNER
+   ═══════════════════════════════════════════════════════════════ */
+.report-range-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--accent-soft), rgba(74, 158, 255, 0.06));
+    border: 1px solid var(--accent-soft);
+    border-radius: var(--r-lg);
+    cursor: pointer;
+    transition: all 0.3s var(--easing);
+    position: relative;
+    overflow: hidden;
+}
+.report-range-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--accent-soft), transparent);
+    transform: translateX(-100%);
+    animation: bannerShine 3s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes bannerShine {
+    0%, 100% { transform: translateX(-100%); }
+    50%      { transform: translateX(100%); }
+}
+.report-range-banner:active {
+    transform: scale(0.98);
+    border-color: var(--accent);
+}
+.report-range-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+}
+.report-range-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.report-range-label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+    animation: dotPulse 2s ease-in-out infinite;
+}
+.report-range-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.report-range-value .sep {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 11px;
+}
+.report-range-hint {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+.report-range-edit {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+    box-shadow: 0 6px 20px var(--accent-glow);
+    transition: transform 0.4s var(--easing-bounce);
+}
+.report-range-banner:active .report-range-edit {
+    transform: rotate(-15deg) scale(1.1);
+}
+.last-updated {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-1);
+    border-radius: var(--r-full);
+    font-size: 10.5px;
+    color: var(--muted);
+    font-weight: 500;
+}
+.last-updated .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 8px var(--mint);
+    animation: dotPulse 2s ease-in-out infinite;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -3024,6 +3143,20 @@ body::after {
                 </div>
             </div>
         </div>
+       <!-- Report Range Banner -->
+<div class="report-range-banner reveal" id="reportRangeBanner">
+    <div class="report-range-info">
+        <div class="report-range-label">گزارش فعال</div>
+        <div class="report-range-value">
+            <span id="rangeFromDisplay">—</span>
+            <span class="sep">تا</span>
+            <span id="rangeToDisplay">—</span>
+        </div>
+        <div class="report-range-hint" id="rangeDaysHint">—</div>
+    </div>
+    <div class="report-range-edit">✎</div>
+</div>
+
 
         <div class="live-bar reveal">
             <span class="pulse"></span>
@@ -3869,7 +4002,7 @@ document.addEventListener('touchend', () => {
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 60 — SAMPLE DATA
    ═══════════════════════════════════════════════════════════════════ */
-const API_URL = '';
+const API_URL = 'https://monitor-api-01e2.onrender.com/api/dashboard';
 const SAMPLE_DATA = {
     total: 288, water: 254, energy: 34, channelsCount: 8, personsCount: 7,
     categories: [
@@ -3952,9 +4085,72 @@ async function fetchData() {
         await new Promise(r => setTimeout(r, 300));
         return SAMPLE_DATA;
     }
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error('API error: ' + res.status);
-    return await res.json();
+    try {
+        const [fy, fm, fd] = State.dateRange.from.split('-').map(Number);
+        const [ty, tm, td] = State.dateRange.to.split('-').map(Number);
+        const from_greg = jalaliToGregorian(fy, fm, fd);
+        const to_greg = jalaliToGregorian(ty, tm, td);
+        const url = `${API_URL}?from_date=${from_greg}&to_date=${to_greg}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data.error || data.total === 0) {
+            console.warn('API empty or error, using sample');
+            return SAMPLE_DATA;
+        }
+        return data;
+    } catch (e) {
+        console.warn('Fetch failed, using sample data:', e);
+        return SAMPLE_DATA;
+    }
+}
+
+function jalaliToGregorian(jy, jm, jd) {
+    // الگوریتم دقیق تبدیل شمسی به میلادی
+    const g_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    const j_days_in_month = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
+    
+    let jy2 = jy - 979;
+    let jm2 = jm - 1;
+    let jd2 = jd - 1;
+    
+    let j_day_no = 365 * jy2 + Math.floor(jy2 / 33) * 8 + Math.floor((jy2 % 33 + 3) / 4);
+    for (let i = 0; i < jm2; ++i) j_day_no += j_days_in_month[i];
+    j_day_no += jd2;
+    
+    let g_day_no = j_day_no + 79;
+    
+    let gy = 1600 + 400 * Math.floor(g_day_no / 146097);
+    g_day_no = g_day_no % 146097;
+    
+    let leap = true;
+    if (g_day_no >= 36525) {
+        g_day_no--;
+        gy += 100 * Math.floor(g_day_no / 36524);
+        g_day_no = g_day_no % 36524;
+        if (g_day_no >= 365) g_day_no++;
+        else leap = false;
+    }
+    
+    gy += 4 * Math.floor(g_day_no / 1461);
+    g_day_no %= 1461;
+    
+    if (g_day_no >= 366) {
+        leap = false;
+        g_day_no--;
+        gy += Math.floor(g_day_no / 365);
+        g_day_no = g_day_no % 365;
+    }
+    
+    let gd = g_day_no + 1;
+    let gm;
+    for (gm = 0; gm < 13; gm++) {
+        const ml = (gm === 1 && leap) ? 29 : g_days_in_month[gm];
+        if (gd <= ml) break;
+        gd -= ml;
+    }
+    
+    return `${gy}-${String(gm + 1).padStart(2, '0')}-${String(gd).padStart(2, '0')}`;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -4105,11 +4301,33 @@ function renderAll(data) {
 
     document.getElementById('statusLabel').textContent = `${toFa(data.total)} مچ`;
     document.getElementById('liveBarText').textContent = `آخرین بروزرسانی: ${formatTime()}`;
+       updateRangeDisplay();
     document.getElementById('heatmapTotal').textContent = toFa(data.total);
 
     attachHandlers();
 }
-
+function updateRangeDisplay() {
+    const from = State.dateRange.from;
+    const to = State.dateRange.to;
+    const fromEl = document.getElementById('rangeFromDisplay');
+    const toEl = document.getElementById('rangeToDisplay');
+    const hintEl = document.getElementById('rangeDaysHint');
+    if (fromEl) fromEl.textContent = from;
+    if (toEl) toEl.textContent = to;
+    if (hintEl) {
+        try {
+            const [fy, fm, fd] = from.split('-').map(Number);
+            const [ty, tm, td] = to.split('-').map(Number);
+            // تقریب تعداد روز (شبیه‌سازی شمسی)
+            const days = Math.abs(
+                ((ty * 365 + tm * 30 + td) - (fy * 365 + fm * 30 + fd))
+            ) + 1;
+            hintEl.textContent = `${toFa(days)} روز پایش فعال`;
+        } catch(e) {
+            hintEl.textContent = '';
+        }
+    }
+}
 function infoRow(icon, label, val) {
     return `<div style="display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border-1);">
         <span style="color:var(--muted);font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>${icon}</span>${label}</span>
@@ -5185,6 +5403,10 @@ window.toggleBookmark = toggleBookmark;
 window.copyToClipboard = copyToClipboard;
 window.shareContent = shareContent;
 window.showToast = showToast;
+   // Attach range banner click
+setTimeout(() => {
+    document.getElementById('reportRangeBanner')?.addEventListener('click', openDatePicker);
+}, 500);
 </script>
 
 </body>
