@@ -3133,7 +3133,63 @@ body::after {
     .hero { background: #0A0A0A !important; -webkit-print-color-adjust: exact; }
     .panel { box-shadow: none; page-break-inside: avoid; }
 }
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 43.5 — FORCE VAZIRMATN OVERRIDE
+   ═══════════════════════════════════════════════════════════════ */
+.hero h1,
+.hero h1 .word,
+.hero h1 .word .ltr,
+.hero h1 .accent,
+.hero h1 .accent .ltr {
+    font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+    font-style: normal !important;
+    font-weight: 800 !important;
+    letter-spacing: -1px !important;
+}
 
+.hero h1 .accent,
+.hero h1 .accent .ltr {
+    font-weight: 900 !important;
+    color: var(--accent) !important;
+}
+
+.hero h1 .accent::after {
+    bottom: 0 !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), var(--accent), transparent) !important;
+}
+
+/* Fix other serif fonts that leak in */
+.sheet-title,
+.panel-title,
+.row-title,
+.empty-title,
+.kpi-value,
+.stat-value,
+.mini-bar-value,
+.kw-stat-value,
+.about-name,
+.about-version {
+    font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+}
+
+.kpi-value,
+.stat-value,
+.mini-bar-value,
+.kw-stat-value {
+    font-weight: 800 !important;
+}
+
+.sheet-title {
+    font-weight: 700 !important;
+    font-size: 18px !important;
+    letter-spacing: -0.3px !important;
+}
+
+.about-name {
+    font-weight: 800 !important;
+    letter-spacing: 2px !important;
+}
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 44 — REDUCED MOTION
    ═══════════════════════════════════════════════════════════════════ */
