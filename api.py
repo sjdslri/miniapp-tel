@@ -6,9 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from datetime import datetime, timedelta
 from collections import Counter
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = FastAPI(title="Monitor API v3")
 
@@ -34,6 +31,11 @@ def root():
     return {"status": "ok", "message": "Monitor API v3", "backend": "supabase"}
 
 
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+
 @app.get("/api/dashboard")
 def dashboard(
     from_date: str = Query(None),
@@ -48,7 +50,6 @@ def dashboard(
         start = f"{from_date} 00:00:00"
         end = f"{to_date} 23:59:59"
 
-        # همه مچ‌ها در بازه
         result = supabase.table("keyword_matches") \
             .select("*") \
             .gte("message_date", start) \
@@ -67,14 +68,12 @@ def dashboard(
                 "range": {"from": from_date, "to": to_date}
             }
 
-        # تفکیک آب و پروژه
         water_kw = ['آب', 'فاضلاب', 'تصفیه', 'پساب', 'آبرسانی', 'چاه', 'مخزن', 'خط انتقال']
         project_kw = ['پروژه', 'افتتاح', 'بهره‌برداری', 'کلنگ']
 
         water_count = sum(1 for r in rows if any(k in (r.get("matched_keywords") or "") for k in water_kw))
         project_count = sum(1 for r in rows if any(k in (r.get("matched_keywords") or "") for k in project_kw))
 
-        # آمار روزانه
         daily_counts = Counter()
         for r in rows:
             d = (r.get("message_date") or "")[:10]
@@ -82,7 +81,6 @@ def dashboard(
                 daily_counts[d] += 1
         daily = [{"date": d, "count": c} for d, c in sorted(daily_counts.items())]
 
-        # آمار ساعتی
         hourly = [0] * 24
         for r in rows:
             dt = r.get("message_date") or ""
@@ -93,7 +91,6 @@ def dashboard(
                 except:
                     pass
 
-        # کانال‌ها
         channel_groups = {}
         for r in rows:
             u = r.get("channel_username") or "unknown"
@@ -113,7 +110,6 @@ def dashboard(
                 } for m in msgs[:20]]
             })
 
-        # دسته‌بندی
         kw_counter = Counter()
         for r in rows:
             for k in (r.get("matched_keywords") or "").split(", "):
@@ -121,7 +117,6 @@ def dashboard(
                     kw_counter[k.strip()] += 1
         categories = [{"name": k, "count": v} for k, v in kw_counter.most_common(10)]
 
-        # مقامات (ساده)
         persons_data = [
             {"name": "عباس علی‌آبادی", "role": "وزیر نیرو", "aliases": ["علی‌آبادی", "وزیر نیرو"]},
             {"name": "علیرضا عبدیان", "role": "مدیرعامل آبفای کرمان", "aliases": ["عبدیان"]},
@@ -148,7 +143,7 @@ def dashboard(
         return {
             "total": total,
             "water": water_count,
-            "energy": project_count,  # برای سازگاری
+            "energy": project_count,
             "project": project_count,
             "channelsCount": len(channels),
             "personsCount": len(persons),
