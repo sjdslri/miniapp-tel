@@ -4659,22 +4659,6 @@ function renderPersonChart(persons) {
     });
 }
 
-
-
-    const total = data.water + data.project;
-    const wPct = total ? ((data.water / total) * 100).toFixed(1) : 0;
-    const ePct = total ? ((data.project / total) * 100).toFixed(1) : 0;
-    document.getElementById('ratioBars').innerHTML = `
-        <div class="mini-bar"><span class="mini-bar-label">💧 آب</span><div class="mini-bar-track"><div class="mini-bar-fill" data-w="${wPct}" style="background:linear-gradient(90deg,#2B6FDB,#4A9EFF)"></div></div><span class="mini-bar-value">${toFa(wPct)}%</span></div>
-        <div class="mini-bar"><span class="mini-bar-label">⚡ برق</span><div class="mini-bar-track"><div class="mini-bar-fill" data-w="${ePct}" style="background:linear-gradient(90deg,#FF7B2C,#FFB84D)"></div></div><span class="mini-bar-value">${toFa(ePct)}%</span></div>
-    `;
-    setTimeout(() => {
-        document.querySelectorAll('#ratioBars .mini-bar-fill').forEach(el => {
-            el.style.width = el.dataset.w + '%';
-        });
-    }, 200);
-}
-
 function renderHourlyChart(hourly) {
     const c = document.getElementById('hourlyChart');
     if (!c) return;
