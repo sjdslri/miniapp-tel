@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" data-theme="gold" data-speed="normal" data-font="md">
+<html lang="fa" dir="rtl" data-theme="blue" data-speed="normal" data-font="md">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
@@ -108,8 +108,8 @@ ul, ol { list-style: none; }
     /* Semantic colors */
     --water: #4A9EFF;
     --water-2: #2B6FDB;
-    --energy: #FFB84D;
-    --energy-2: #FF7B2C;
+    --project: #06B6D4;
+    --project-2: #0891B2;
     --violet: #B794F6;
     --violet-2: #7C3AED;
     --mint: #14B8A6;
@@ -1106,9 +1106,9 @@ body::after {
     background: rgba(74, 158, 255, 0.12);
     border-color: rgba(74, 158, 255, 0.25);
 }
-.kpi-icon.energy {
-    background: rgba(255, 184, 77, 0.12);
-    border-color: rgba(255, 184, 77, 0.25);
+.kpi-icon.project {
+    background: rgba(6, 182, 212, 0.12);
+    border-color: rgba(6, 182, 212, 0.25);
 }
 .kpi-icon.violet {
     background: rgba(183, 148, 246, 0.12);
@@ -1362,10 +1362,10 @@ body::after {
     border-color: rgba(74, 158, 255, 0.2);
     color: var(--water);
 }
-.row-badge.energy {
-    background: rgba(255, 184, 77, 0.12);
-    border-color: rgba(255, 184, 77, 0.2);
-    color: var(--energy);
+.row-badge.project {
+    background: rgba(6, 182, 212, 0.12);
+    border-color: rgba(6, 182, 212, 0.2);
+    color: var(--project);
 }
 
 .row-arrow {
@@ -1427,10 +1427,10 @@ body::after {
     border-color: rgba(74, 158, 255, 0.2);
     color: var(--water);
 }
-.tag.energy {
-    background: rgba(255, 184, 77, 0.12);
-    border-color: rgba(255, 184, 77, 0.2);
-    color: var(--energy);
+.tag.project {
+    background: rgba(6, 182, 212, 0.12);
+    border-color: rgba(6, 182, 212, 0.2);
+    color: var(--project);
 }
 .tag.violet {
     background: rgba(183, 148, 246, 0.12);
@@ -1794,7 +1794,7 @@ body::after {
     text-shadow: 0 0 16px var(--accent-glow);
 }
 .stat-value.water { color: var(--water); text-shadow: 0 0 16px rgba(74, 158, 255, 0.4); }
-.stat-value.energy { color: var(--energy); text-shadow: 0 0 16px rgba(255, 184, 77, 0.4); }
+.stat-value.project { color: var(--project); text-shadow: 0 0 16px rgba(6, 182, 212, 0.4); }
 .stat-label {
     font-family: 'Syne', sans-serif;
     font-size: 9px;
@@ -2285,7 +2285,7 @@ body::after {
 .word.s2 { font-size: 26px; color: var(--accent-2); }
 .word.s3 { font-size: 22px; color: var(--water); }
 .word.s4 { font-size: 18px; color: var(--violet); }
-.word.s5 { font-size: 15px; color: var(--energy); }
+.word.s5 { font-size: 15px; color: var(--project); }
 .word.s6 { font-size: 13px; color: var(--muted); }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2312,7 +2312,7 @@ body::after {
     border-radius: 3px 0 0 3px;
 }
 .alert-card.info::before { background: var(--water); }
-.alert-card.warn::before { background: var(--energy); }
+.alert-card.warn::before { background: var(--project); }
 .alert-card.critical::before { background: var(--rose); }
 .alert-card.success::before { background: var(--mint); }
 
@@ -2328,7 +2328,7 @@ body::after {
     background: var(--surface-3);
 }
 .alert-card.info .alert-icon { background: rgba(74, 158, 255, 0.12); }
-.alert-card.warn .alert-icon { background: rgba(255, 184, 77, 0.12); }
+.alert-card.warn .alert-icon { background: rgba(6, 182, 212, 0.12); }
 .alert-card.critical .alert-icon { background: rgba(225, 29, 72, 0.12); }
 .alert-card.success .alert-icon { background: rgba(20, 184, 166, 0.12); }
 
@@ -2364,7 +2364,7 @@ body::after {
     align-items: flex-start;
 }
 .bookmark-star {
-    color: var(--energy);
+    color: var(--project);
     font-size: 18px;
     flex-shrink: 0;
     line-height: 1;
@@ -3364,19 +3364,18 @@ body::after {
                 <div class="kpi-label">Water</div>
             </div>
             <div class="kpi reveal" data-tilt data-nav="messages">
-                <div class="kpi-header">
-                    <div class="kpi-icon energy">⚡</div>
-                    <div class="kpi-trend up">▲ ۳٪</div>
-                </div>
-                <div class="kpi-value" data-count="0">۰</div>
-                <div class="kpi-label">Energy</div>
-            </div>
+    <div class="kpi-header">
+        <div class="kpi-icon violet">🏗</div>
+        <div class="kpi-trend up">▲ ۵٪</div>
+    </div>
+    <div class="kpi-value" data-count="0">۰</div>
+    <div class="kpi-label">Projects</div>
+</div>
         </div>
 
         <div class="chips" id="chips">
             <button class="chip active" data-filter="all">همه</button>
             <button class="chip" data-filter="water">💧 آب</button>
-            <button class="chip" data-filter="energy">⚡ برق</button>
             <button class="chip" data-filter="project">🏗 پروژه</button>
             <button class="chip" data-filter="management">📋 مصرف</button>
         </div>
@@ -3476,13 +3475,7 @@ body::after {
 
     <!-- ============ VIEW: ANALYTICS ============ -->
     <div class="page-view" data-page="analytics">
-        <div class="panel">
-            <div class="panel-head">
-                <div class="panel-title">نسبت آب به برق</div>
-            </div>
-            <div class="chart-wrap short"><canvas id="ratioChart"></canvas></div>
-            <div class="mini-bars" id="ratioBars"></div>
-        </div>
+        
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">تاپ کلیدواژه‌ها</div>
@@ -3681,8 +3674,8 @@ body::after {
                 <div class="about-name">SJDSLRI</div>
                 <div class="about-version">VERSION 6.0 · MMXXV</div>
                 <div class="about-desc">
-                    سیستم پایش هوشمند کانال‌های خبری<br>
-                    آب، فاضلاب و صنعت برق
+                    سیستم پایش کانال‌های خبری آبفا در اپلیکیشن بله<br>
+                    آب و فاضلاب (آبفا) 
                 </div>
             </div>
         </div>
@@ -3895,7 +3888,7 @@ const State = {
     autoRefresh: localStorage.getItem('autoRefresh') !== 'false',
     refreshInterval: 60000,
     refreshTimer: null,
-    theme: localStorage.getItem('theme') || 'gold',
+    theme: localStorage.getItem('theme') || 'blue',
     speed: localStorage.getItem('speed') || 'normal',
     fontSize: localStorage.getItem('fontSize') || 'md',
     bookmarks: JSON.parse(localStorage.getItem('bookmarks') || '[]'),
@@ -4216,14 +4209,14 @@ document.addEventListener('touchend', () => {
    ═══════════════════════════════════════════════════════════════════ */
 const API_URL = 'https://monitor-api-01e2.onrender.com/api/dashboard';
 const SAMPLE_DATA = {
-    total: 288, water: 254, energy: 34, channelsCount: 8, personsCount: 7,
+    total: 288, water: 254, project: 34, channelsCount: 8, personsCount: 7,
     categories: [
         { name: 'فاضلاب و تصفیه', count: 97 },
         { name: 'مدیریت و مقامات', count: 93 },
         { name: 'سایر', count: 80 },
         { name: 'آموزش و فرهنگ', count: 42 },
         { name: 'پروژه و آبرسانی', count: 37 },
-        { name: 'برق و انرژی', count: 34 },
+        { name: 'پروژه‌ها', count: 34 },
         { name: 'مدیریت مصرف', count: 32 },
         { name: 'افتتاح', count: 28 },
     ],
@@ -4241,7 +4234,7 @@ const SAMPLE_DATA = {
             { text: 'برگزاری پویش مردمی «همه حاضر» برای دانش‌آموزان نیازمند', date: '۲۰ شهریور ۱۴۰۵', keywords: ['پویش','دانش‌آموز'], type: 'management' }
         ]},
         { name: 'صدا و سیمای کرمانشاه', username: 'tvzagross', count: 35, messages: [
-            { text: 'جدول زمانبندی قطعی برق استان کرمانشاه شنبه ۲۱ شهریور ۱۴۰۵', date: '۲۰ شهریور ۱۴۰۵', keywords: ['قطعی برق','برق'], type: 'energy' },
+            { text: 'جدول زمانبندی قطعی پروژه‌ استان کرمانشاه شنبه ۲۱ شهریور ۱۴۰۵', date: '۲۰ شهریور ۱۴۰۵', keywords: ['قطعی برق','برق'], type: 'project' },
             { text: 'هر قطره آب، یک فرصت برای زندگی #مدیریت_مصرف #همیار_آب', date: '۲۰ شهریور ۱۴۰۵', keywords: ['مدیریت مصرف','صرفه‌جویی'], type: 'management' }
         ]},
         { name: 'همکار', username: 'hamkaar', count: 31, messages: [
@@ -4255,13 +4248,13 @@ const SAMPLE_DATA = {
             { text: 'بازسازی ۲۴۰۰ متر از شبکه توزیع آب روستای سیوند مرودشت', date: '۲۰ شهریور ۱۴۰۵', keywords: ['شبکه توزیع','روستا'], type: 'project' }
         ]},
         { name: 'خبرگزاری صدا و سیما', username: 'iribnews', count: 12, messages: [
-            { text: 'وزیر نیرو: ممکن است بارش‌های سهمگین داشته باشیم / همه آماده باشند', date: '۲۱ شهریور ۱۴۰۵', keywords: ['وزیر نیرو','بارش'], type: 'energy' }
+            { text: 'وزیر نیرو: ممکن است بارش‌های سهمگین داشته باشیم / همه آماده باشند', date: '۲۱ شهریور ۱۴۰۵', keywords: ['وزیر نیرو','بارش'], type: 'project' }
         ]},
         { name: 'آب و فاضلاب خراسان جنوبی', username: 'abfakhj', count: 12, messages: [
             { text: 'تصفیه بیش از ۳.۸ میلیون مترمکعب فاضلاب در بیرجند طی ۵ ماه نخست سال', date: '۲۰ شهریور ۱۴۰۵', keywords: ['تصفیه','فاضلاب','بیرجند'], type: 'water' }
         ]},
         { name: 'کانال خبری وزارت نیرو', username: 'niroonline', count: 12, messages: [
-            { text: 'بهره‌برداری از ۴ واحد نیروگاه برق‌آبی سد چمشیر (۱۲۰ مگاوات)', date: '۲۱ شهریور ۱۴۰۵', keywords: ['نیروگاه','افتتاح'], type: 'energy' }
+            { text: 'بهره‌برداری از ۴ واحد نیروگاه برق‌آبی سد چمشیر (۱۲۰ مگاوات)', date: '۲۱ شهریور ۱۴۰۵', keywords: ['نیروگاه','افتتاح'], type: 'project' }
         ]}
     ],
     persons: [
@@ -4394,7 +4387,7 @@ applyFont();
    SECTION 62 — RENDER — KPI
    ═══════════════════════════════════════════════════════════════════ */
 function renderKPI(data) {
-    const vals = [data.total, data.channels.length, data.water, data.energy];
+    const vals = [data.total, data.channels.length, data.water, data.project];
     document.querySelectorAll('#kpiGrid .kpi-value').forEach((el, i) => {
         if (vals[i] !== undefined) animateNumber(el, vals[i]);
     });
@@ -4422,7 +4415,7 @@ function channelRowHTML(ch) {
 
 function messageRowHTML(m) {
     const tags = (m.keywords || []).slice(0, 3).map(k => {
-        const cls = k.includes('برق') ? 'energy' : (k.includes('آب') || k.includes('فاضلاب')) ? 'water' : 'violet';
+        const cls = k.includes('برق') ? 'project' : (k.includes('آب') || k.includes('فاضلاب')) ? 'water' : 'violet';
         return `<span class="tag ${cls}">${escapeHtml(k)}</span>`;
     }).join('');
     return `<div class="row" data-msg-id="${m._id}">
@@ -4493,14 +4486,16 @@ function renderAll(data) {
         ${infoRow('📡', 'کانال‌ها', toFa(data.channels.length))}
         ${infoRow('🎯', 'کل مچ‌ها', toFa(data.total))}
         ${infoRow('💧', 'آب و فاضلاب', toFa(data.water))}
-        ${infoRow('⚡', 'برق و انرژی', toFa(data.energy))}
+        ${infoRow('⚡', 'پروژه‌ها', toFa(data.project))}
         ${infoRow('👥', 'مقامات', toFa(data.persons.length))}
     `;
 
+const filteredCategories = filteredCategories.filter(c => 
+    !c.name.includes('برق') && !c.name.includes('انرژی') && !c.name.includes('نیروگاه')
+);
     renderCatChart(data.categories);
     renderDayChart(data.daily);
     renderPersonChart(data.persons);
-    renderRatioChart(data);
     renderHourlyChart(data.hourly);
     renderTopKeywords(data);
     renderTrendAnalysis(data);
@@ -4554,7 +4549,7 @@ function renderCatChart(cats) {
     const c = document.getElementById('catChart');
     if (!c) return;
     if (State.charts.cat) State.charts.cat.destroy();
-    const colors = ['#C9A96E', '#4A9EFF', '#FFB84D', '#6EE7D4', '#B794F6', '#E11D48', '#84CC16', '#06B6D4'];
+    const colors = ['#4A9EFF', '#06B6D4', '#14B8A6', '#5EEAD4', '#38BDF8', '#0EA5E9', '#0891B2', '#67E8F9'];
     State.charts.cat = new Chart(c, {
         type: 'doughnut',
         data: {
@@ -4664,32 +4659,11 @@ function renderPersonChart(persons) {
     });
 }
 
-function renderRatioChart(data) {
-    const c = document.getElementById('ratioChart');
-    if (!c) return;
-    if (State.charts.ratio) State.charts.ratio.destroy();
-    State.charts.ratio = new Chart(c, {
-        type: 'doughnut',
-        data: {
-            labels: ['آب و فاضلاب', 'برق و انرژی'],
-            datasets: [{ data: [data.water, data.energy], backgroundColor: ['#4A9EFF', '#FFB84D'], borderWidth: 0, hoverOffset: 12 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, cutout: '70%',
-            animation: { duration: 1400 },
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#8A8070', font: { family: 'Vazirmatn', size: 10.5, weight: '600' }, boxWidth: 8, boxHeight: 8, padding: 8, usePointStyle: true, pointStyle: 'circle' }
-                },
-                tooltip: { rtl: true, backgroundColor: '#16161F', titleColor: '#C9A96E', bodyColor: '#E8E8F0', displayColors: false, padding: 12, cornerRadius: 12 }
-            }
-        }
-    });
 
-    const total = data.water + data.energy;
+
+    const total = data.water + data.project;
     const wPct = total ? ((data.water / total) * 100).toFixed(1) : 0;
-    const ePct = total ? ((data.energy / total) * 100).toFixed(1) : 0;
+    const ePct = total ? ((data.project / total) * 100).toFixed(1) : 0;
     document.getElementById('ratioBars').innerHTML = `
         <div class="mini-bar"><span class="mini-bar-label">💧 آب</span><div class="mini-bar-track"><div class="mini-bar-fill" data-w="${wPct}" style="background:linear-gradient(90deg,#2B6FDB,#4A9EFF)"></div></div><span class="mini-bar-value">${toFa(wPct)}%</span></div>
         <div class="mini-bar"><span class="mini-bar-label">⚡ برق</span><div class="mini-bar-track"><div class="mini-bar-fill" data-w="${ePct}" style="background:linear-gradient(90deg,#FF7B2C,#FFB84D)"></div></div><span class="mini-bar-value">${toFa(ePct)}%</span></div>
@@ -4749,15 +4723,18 @@ function renderTrendAnalysis(data) {
     const pct = prev ? ((diff / prev) * 100).toFixed(1) : 0;
     const avg = Math.round(daily.reduce((s, d) => s + d.count, 0) / daily.length);
     const max = Math.max(...daily.map(d => d.count));
+    
+    // محاسبه تخمینی پروژه‌ها
+    const projectCount = Math.round(data.total * 0.15);
 
     document.getElementById('trendAnalysis').innerHTML = `
         ${infoRow('📈', 'مقایسه با روز قبل', `<span style="color:${diff >= 0 ? 'var(--mint)' : 'var(--rose)'}">${diff >= 0 ? '▲' : '▼'} ${toFa(Math.abs(pct))}%</span>`)}
         ${infoRow('📊', 'میانگین روزانه', toFa(avg))}
         ${infoRow('🔥', 'پیک فعالیت', toFa(max))}
-        ${infoRow('📅', 'تعداد روزها', toFa(daily.length))}
+        ${infoRow('💧', 'اخبار آب و فاضلاب', toFa(data.total))}
+        ${infoRow('🏗', 'پروژه‌های آبرسانی', toFa(projectCount))}
     `;
 }
-
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 67 — HEATMAP
    ═══════════════════════════════════════════════════════════════════ */
@@ -4848,8 +4825,8 @@ function generateAlerts(data) {
     if (recent > prev * 1.5) {
         alerts.push({ type: 'warn', icon: '📈', title: 'افزایش شدید مچ‌ها', text: `امروز ${toFa(recent)} مچ ثبت شد که ${toFa(Math.round((recent / prev - 1) * 100))}٪ بیشتر از دیروز است`, time: 'چند دقیقه پیش' });
     }
-    if (data.water > data.energy * 5) {
-        alerts.push({ type: 'info', icon: '💧', title: 'غلبه اخبار آب', text: `اخبار آب و فاضلاب ${toFa(Math.round(data.water / data.energy))} برابر اخبار برق است`, time: '۵ دقیقه پیش' });
+    if (data.water > data.project * 5) {
+        alerts.push({ type: 'info', icon: '💧', title: 'غلبه اخبار آب', text: `اخبار آب و فاضلاب ${toFa(Math.round(data.water / data.project))} برابر اخبار برق است`, time: '۵ دقیقه پیش' });
     }
     alerts.push({ type: 'success', icon: '✅', title: 'پایش فعال است', text: `${toFa(data.channels.length)} کانال در حال پایش هستند`, time: 'همین حالا' });
     alerts.push({ type: 'info', icon: '🔔', title: 'به‌روزرسانی سیستم', text: 'نسخه ۶.۰ با قابلیت‌های جدید منتشر شد', time: '۱ ساعت پیش' });
@@ -5009,7 +4986,7 @@ function openChannelModal(username) {
     const stats = `<div class="stat-grid">
         <div class="stat-pill"><div class="stat-value">${toFa(ch.count)}</div><div class="stat-label">کل مچ</div></div>
         <div class="stat-pill"><div class="stat-value water">${toFa(msgs.filter(m => m.type === 'water').length)}</div><div class="stat-label">آب</div></div>
-        <div class="stat-pill"><div class="stat-value energy">${toFa(msgs.filter(m => m.type === 'energy').length)}</div><div class="stat-label">برق</div></div>
+        <div class="stat-pill"><div class="stat-value project">${toFa(msgs.filter(m => m.type === 'project').length)}</div><div class="stat-label">برق</div></div>
     </div>`;
     const msgsHTML = msgs.length
         ? msgs.map(m => fullMessageHTML(m)).join('')
@@ -5069,7 +5046,7 @@ function openMessageModal(m) {
 
 function fullMessageHTML(m, showChannel = false) {
     const tags = (m.keywords || []).map(k => {
-        const cls = k.includes('برق') ? 'energy' : (k.includes('آب') || k.includes('فاضلاب')) ? 'water' : 'violet';
+        const cls = k.includes('برق') ? 'project' : (k.includes('آب') || k.includes('فاضلاب')) ? 'water' : 'violet';
         return `<span class="tag ${cls}">${escapeHtml(k)}</span>`;
     }).join('');
     const ct = showChannel && m.channel ? `<span class="tag">📡 ${escapeHtml(m.channel)}</span>` : '';
@@ -5308,7 +5285,7 @@ function showShortcuts() {
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 80 — THEME CYCLER
    ═══════════════════════════════════════════════════════════════════ */
-const THEMES = ['gold', 'blue', 'violet', 'mint', 'rose'];
+const THEMES = ['blue', 'mint', 'cyan', 'violet'];
 function cycleTheme() {
     const idx = THEMES.indexOf(State.theme);
     State.theme = THEMES[(idx + 1) % THEMES.length];
