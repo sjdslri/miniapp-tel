@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#05050A">
 <title>sjdslri | @sjdslri_bot</title>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <link rel="preconnect" href="https://monitor-api-o1e2.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://monitor-api-o1e2.onrender.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -6324,19 +6324,28 @@ setTimeout(() => {
         });
     };
 }, 800);
+   async function waitForChart() {
+    let attempts = 0;
+    while (typeof Chart === 'undefined' && attempts < 80) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+    }
+    return typeof Chart !== 'undefined';
+}
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 86 — INIT
    ═══════════════════════════════════════════════════════════════════ */
 (async () => {
     try {
         document.getElementById('dateRangeLabel').textContent = State.dateRange.from;
+        await waitForChart();   
         const t = document.getElementById('autoRefreshToggle');
         if (t) t.classList.toggle('on', State.autoRefresh);
 
-        const data = await fetchData();
+               const data = await fetchData();
         renderAll(data);
-               await loadMonitoredData();
-               await loadPersonalities();
+        loadMonitoredData();    
+        loadPersonalities();       
         if (State.autoRefresh) startAutoRefresh();
 
         setTimeout(() => {
