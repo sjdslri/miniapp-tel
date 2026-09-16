@@ -4458,7 +4458,7 @@ const CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه
 // Pre-warm: سرور رو بیدار کن (بدون انتظار)
 fetch(`${API_BASE}/health`, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
 
-   const FETCH_TIMEOUT = 60000; // ۶۰ ثانیه برای cold start
+   const FETCH_TIMEOUT = 15000; // ۶۰ ثانیه برای cold start
 const SAMPLE_DATA = {
     total: 288, water: 254, project: 34, channelsCount: 8, personsCount: 7,
     categories: [
@@ -4570,7 +4570,7 @@ async function fetchFreshData(from_greg, to_greg, cacheKey) {
     try {
         const url = `${API_URL}?from_date=${from_greg}&to_date=${to_greg}`;
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
