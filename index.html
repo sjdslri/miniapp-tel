@@ -4210,6 +4210,7 @@ document.addEventListener('touchend', () => {
    SECTION 60 — SAMPLE DATA
    ═══════════════════════════════════════════════════════════════════ */
 const API_URL = 'https://monitor-api-o1e2.onrender.com/api/dashboard';
+   const FETCH_TIMEOUT = 60000; // ۶۰ ثانیه برای cold start
 const SAMPLE_DATA = {
     total: 288, water: 254, project: 34, channelsCount: 8, personsCount: 7,
     categories: [
@@ -4298,11 +4299,20 @@ async function fetchData() {
         const from_greg = jalaliToGregorian(fy, fm, fd);
         const to_greg = jalaliToGregorian(ty, tm, td);
         const url = `${API_URL}?from_date=${from_greg}&to_date=${to_greg}`;
-        const res = await fetch(url);
+        
+        // Timeout برای جلوگیری از انتظار بی‌نهایت
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+        
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        if (data.error || data.total === 0) {
-            console.warn('API empty or error, using sample');
+        
+        // چک صحیح: اگه response خالی یا خطا بود
+        if (!data || typeof data.total !== 'number' || data.total === 0 || data.error) {
+            console.warn('API empty or invalid, using sample data');
             return SAMPLE_DATA;
         }
         return data;
@@ -4508,7 +4518,9 @@ const filteredCategories = data.categories.filter(c =>
     renderAlerts(data);
     renderBookmarks();
 
-    document.getElementById('statusLabel').textContent = `${toFa(data.total)} مچ`;
+    const isRealData = data !== SAMPLE_DATA;
+const prefix = isRealData ? '🟢' : '🟡';
+document.getElementById('statusLabel').textContent = `${prefix} ${toFa(data.total)} مچ${isRealData ? '' : ' (نمونه)'}`;
     document.getElementById('liveBarText').textContent = `آخرین بروزرسانی: ${formatTime()}`;
        updateRangeDisplay();
     document.getElementById('heatmapTotal').textContent = toFa(data.total);
