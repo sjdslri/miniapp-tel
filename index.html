@@ -2,6 +2,10 @@
 <html lang="fa" dir="rtl" data-theme="blue" data-speed="normal" data-font="md">
 <head>
 <meta charset="UTF-8">
+<script>
+// Pre-warm Render server
+fetch('https://monitor-api-o1e2.onrender.com/health', { method: 'HEAD', mode: 'no-cors' }).catch(()=>{});
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05050A">
 <title>sjdslri | @sjdslri_bot</title>
@@ -12,7 +16,7 @@
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════
@@ -4176,6 +4180,7 @@ function showToast(msg, type = 'info', duration = 2400) {
    SECTION 50 — CONFETTI
    ═══════════════════════════════════════════════════════════════════ */
 function launchConfetti(count = 40) {
+    if (isLowEnd) return; // در تلگرام کنفتی نزن
     const colors = ['#C9A96E', '#4A9EFF', '#FFB84D', '#B794F6', '#6EE7D4', '#FF8FA3'];
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
@@ -4200,7 +4205,7 @@ function launchConfetti(count = 40) {
 const loadCounter = document.getElementById('loadCounter');
 let loadVal = 0;
 const loadInterval = setInterval(() => {
-    loadVal += Math.random() * 12;
+    loadVal += Math.random() * 25;  
     if (loadVal >= 100) {
         loadVal = 100;
         clearInterval(loadInterval);
@@ -4208,13 +4213,15 @@ const loadInterval = setInterval(() => {
             document.getElementById('preloader').classList.add('done');
             document.getElementById('app').classList.add('loaded');
             startHeroAnimation();
-            if (!State.onboardingShown) {
+            // برداشتن onboarding خودکار در تلگرام
+            const isTelegram = !!window.Telegram?.WebApp?.initData;
+            if (!State.onboardingShown && !isTelegram) {
                 setTimeout(startOnboarding, 800);
             }
-        }, 400);
+        }, 200);  
     }
     loadCounter.textContent = Math.floor(loadVal);
-}, 100);
+}, 60);  
 
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 52 — HERO ANIMATION
@@ -4244,7 +4251,11 @@ function startHeroAnimation() {
    SECTION 53 — CUSTOM CURSOR
    ═══════════════════════════════════════════════════════════════════ */
 const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-if (isDesktop) {
+   const isTelegram = !!window.Telegram?.WebApp?.initData;
+const isLowEnd = isTelegram || !isDesktop;
+
+// حذف کنفتی و ذرات در تلگرام برای سرعت
+if (isDesktop && !isTelegram) {
     const cd = document.getElementById('cursorDot');
     const cr = document.getElementById('cursorRing');
     let mx = 0, my = 0, rx = 0, ry = 0, lastTrail = 0;
@@ -4319,7 +4330,8 @@ class Particle {
         pctx.fill();
     }
 }
-for (let i = 0; i < 55; i++) particles.push(new Particle());
+const particleCount = isLowEnd ? 0 : 55;  // در تلگرام ذرات خاموش
+for (let i = 0; i < particleCount; i++) particles.push(new Particle());
 
 (function animateParticles() {
     pctx.clearRect(0, 0, W, H);
@@ -4422,6 +4434,12 @@ document.addEventListener('touchend', () => {
    SECTION 60 — SAMPLE DATA
    ═══════════════════════════════════════════════════════════════════ */
 const API_URL = 'https://monitor-api-o1e2.onrender.com/api/dashboard';
+   const API_BASE_URL = 'https://monitor-api-o1e2.onrender.com';
+
+// ⚡ Pre-warm: سرور رو بیدار کن (این خط رو در <head> هم بذار)
+try {
+    fetch(`${API_BASE_URL}/health`, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
+} catch(e) {}
    const API_BASE = 'https://monitor-api-o1e2.onrender.com';
 const CACHE_KEY = 'dashboard_cache_v1';
 const CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه
@@ -4512,28 +4530,28 @@ async function fetchData() {
         await new Promise(r => setTimeout(r, 300));
         return SAMPLE_DATA;
     }
-    
+
     const [fy, fm, fd] = State.dateRange.from.split('-').map(Number);
     const [ty, tm, td] = State.dateRange.to.split('-').map(Number);
     const from_greg = jalaliToGregorian(fy, fm, fd);
     const to_greg = jalaliToGregorian(ty, tm, td);
-    const cacheKey = `${CACHE_KEY}_${from_greg}_${to_greg}`;
-    
-    // ۱. اگه کش داریم، فوری نشون بده
+    const cacheKey = `dashboard_cache_${from_greg}_${to_greg}`;
+
+    // ۱. چک کردن کش (اگر داده‌ی تازه داریم، فوری نشون بده)
     try {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
             const parsed = JSON.parse(cached);
-            if (Date.now() - parsed.ts < CACHE_TTL) {
-                console.log('📦 Using cached data');
-                // به‌روزرسانی در پس‌زمینه
+            if (Date.now() - parsed.ts < 5 * 60 * 1000) {
+                console.log('📦 استفاده از کش');
+                // به‌روزرسانی پس‌زمینه بدون بلاک کردن
                 fetchFreshData(from_greg, to_greg, cacheKey);
                 return parsed.data;
             }
         }
     } catch (e) { console.warn('Cache read failed:', e); }
-    
-    // ۲. اگه کش نداریم، با timeout برو سراغ سرور
+
+    // ۲. بدون کش، از سرور بگیر
     return await fetchFreshData(from_greg, to_greg, cacheKey);
 }
 
@@ -4541,25 +4559,18 @@ async function fetchFreshData(from_greg, to_greg, cacheKey) {
     try {
         const url = `${API_URL}?from_date=${from_greg}&to_date=${to_greg}`;
         const controller = new AbortController();
-        
-        // اگه بعد از ۴ ثانیه جواب نداد، پیام نشون بده
-        const slowTimer = setTimeout(() => {
-            showToast('⏳ سرور در حال بیدار شدنه...', 'info', 8000);
-        }, 4000);
-        
         const timeoutId = setTimeout(() => controller.abort(), 60000);
-        
+
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
-        clearTimeout(slowTimer);
-        
+
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
-        
+
         if (!data || typeof data.total !== 'number' || data.error) {
             return SAMPLE_DATA;
         }
-        
+
         // ذخیره در کش
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
@@ -4567,13 +4578,10 @@ async function fetchFreshData(from_greg, to_greg, cacheKey) {
                 data: data
             }));
         } catch (e) { console.warn('Cache write failed:', e); }
-        
+
         return data;
     } catch (e) {
-        console.warn('Fetch failed:', e);
-        if (e.name === 'AbortError') {
-            showToast('⚠️ سرور پاسخ نداد، داده‌های نمونه نمایش داده می‌شه', 'error');
-        }
+        console.warn('Fetch failed, using sample:', e);
         return SAMPLE_DATA;
     }
 }
