@@ -6324,14 +6324,6 @@ setTimeout(() => {
         });
     };
 }, 800);
-   async function waitForChart() {
-    let attempts = 0;
-    while (typeof Chart === 'undefined' && attempts < 80) {
-        await new Promise(r => setTimeout(r, 100));
-        attempts++;
-    }
-    return typeof Chart !== 'undefined';
-}
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 86 — INIT
    ═══════════════════════════════════════════════════════════════════ */
