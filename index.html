@@ -4483,7 +4483,7 @@ function renderAll(data) {
     document.getElementById('channelsCountLabel').textContent = toFa(data.channels.length) + ' کانال';
     document.getElementById('topChannelsList').innerHTML = sortedCh.slice(0, 3).map(channelRowHTML).join('');
 
-    document.getElementById('personsList').innerHTML = data.persons.map(personRowHTML).join('');
+    
 
     const allMsgs = [];
     data.channels.forEach(ch => (ch.messages || []).forEach(m => {
@@ -4997,7 +4997,7 @@ function openChannelModal(username) {
 }
 
 function openPersonModal(idx) {
-    const p = State.data.persons[idx];
+    const p = (State.persons && State.persons[idx]) || (State.data.persons && State.data.persons[idx]);
     if (!p) return;
     const grad = avatarGradient(p.name);
     sheetHeader.innerHTML = `
@@ -5561,6 +5561,75 @@ document.getElementById('onbSkip').onclick = () => {
    ═══════════════════════════════════════════════════════════════════ */
 let MonitoredChannels = [];
 let MonitoredKeywords = [];
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 85.6 — PERSONALITIES (از فایل JSON)
+   ═══════════════════════════════════════════════════════════════════ */
+let Personalities = [];
+
+async function loadPersonalities() {
+    try {
+        const res = await fetch('personalities.json');
+        if (res.ok) Personalities = await res.json();
+    } catch (e) {
+        console.warn('Could not load personalities.json:', e);
+    }
+    renderPersonsFromJSON();
+}
+
+function renderPersonsFromJSON() {
+    const listEl = document.getElementById('personsList');
+    if (!listEl) return;
+
+    if (!Personalities.length || !State.allMessages || !State.allMessages.length) {
+        listEl.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-title">داده‌ای نیست</div><div class="empty-text">در انتظار پیام‌های حاوی نام مقامات...</div></div>';
+        renderPersonChart([]);
+        return;
+    }
+
+    const persons = [];
+    Personalities.forEach(p => {
+        const mentions = [];
+        const seen = new Set();
+        State.allMessages.forEach(m => {
+            const text = m.text || '';
+            const matched = p.aliases.some(alias => text.includes(alias));
+            if (matched && !seen.has(m._id)) {
+                seen.add(m._id);
+                mentions.push({
+                    text: text.slice(0, 200),
+                    channel: m.channel || ('@' + (m.channelName || '')),
+                    date: m.date || '',
+                    keywords: m.keywords || [],
+                    link: m.link
+                });
+            }
+        });
+        if (mentions.length > 0) {
+            persons.push({
+                name: p.name,
+                role: p.role,
+                count: mentions.length,
+                mentions: mentions.slice(0, 10)
+            });
+        }
+    });
+
+    persons.sort((a, b) => b.count - a.count);
+    State.persons = persons;
+
+    if (!persons.length) {
+        listEl.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-title">هیچ اشاره‌ای یافت نشد</div><div class="empty-text">در پیام‌های فعلی نام مقامات نیست</div></div>';
+        renderPersonChart([]);
+        return;
+    }
+
+    listEl.innerHTML = persons.map((p, i) => personRowHTML(p, i)).join('');
+    renderPersonChart(persons);
+
+    document.querySelectorAll('[data-person-idx]').forEach(el => {
+        el.onclick = () => openPersonModal(+el.dataset.personIdx);
+    });
+}
 
 async function loadMonitoredData() {
     try {
@@ -5670,6 +5739,7 @@ setTimeout(() => {
         const data = await fetchData();
         renderAll(data);
                await loadMonitoredData();
+               await loadPersonalities();
         if (State.autoRefresh) startAutoRefresh();
 
         setTimeout(() => {
