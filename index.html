@@ -3,14 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <script>
-// Pre-warm Render server
-fetch('https://monitor-api-o1e2.onrender.com/health', { method: 'HEAD', mode: 'no-cors' }).catch(()=>{});
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05050A">
 <title>sjdslri | @sjdslri_bot</title>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>>
 <link rel="preconnect" href="https://monitor-api-o1e2.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://monitor-api-o1e2.onrender.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -4089,6 +4087,23 @@ if (tg) {
     tg.enableClosingConfirmation();
     if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
 }
+function getDefaultDateFrom() {
+    const d = new Date(Date.now() - 7 * 86400000);
+    try {
+        return new Intl.DateTimeFormat('fa-IR-u-nu-latn', {
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(d).replace(/\//g, '-');
+    } catch(e) { return '1405-06-15'; }
+}
+
+function getDefaultDateTo() {
+    const d = new Date();
+    try {
+        return new Intl.DateTimeFormat('fa-IR-u-nu-latn', {
+            year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(d).replace(/\//g, '-');
+    } catch(e) { return '1405-06-21'; }
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 47 — STATE
@@ -4099,9 +4114,9 @@ const State = {
     filter: 'all',
     sortChannels: 'count_desc',
     sortMessages: 'recent',
-    dateRange: {
-        from: localStorage.getItem('dateFrom') || '1405-06-01',
-        to: localStorage.getItem('dateTo') || '1405-06-21'
+      dateRange: {
+        from: localStorage.getItem('dateFrom') || getDefaultDateFrom(),
+        to: localStorage.getItem('dateTo') || getDefaultDateTo()
     },
     autoRefresh: localStorage.getItem('autoRefresh') !== 'false',
     refreshInterval: 60000,
@@ -4436,10 +4451,6 @@ document.addEventListener('touchend', () => {
 const API_URL = 'https://monitor-api-o1e2.onrender.com/api/dashboard';
    const API_BASE_URL = 'https://monitor-api-o1e2.onrender.com';
 
-// ⚡ Pre-warm: سرور رو بیدار کن (این خط رو در <head> هم بذار)
-try {
-    fetch(`${API_BASE_URL}/health`, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
-} catch(e) {}
    const API_BASE = 'https://monitor-api-o1e2.onrender.com';
 const CACHE_KEY = 'dashboard_cache_v1';
 const CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه
@@ -4832,6 +4843,10 @@ function infoRow(icon, label, val) {
 function renderCatChart(cats) {
     const c = document.getElementById('catChart');
     if (!c) return;
+       if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded yet');
+        return;
+    }
     if (State.charts.cat) State.charts.cat.destroy();
     const colors = ['#4A9EFF', '#06B6D4', '#14B8A6', '#5EEAD4', '#38BDF8', '#0EA5E9', '#0891B2', '#67E8F9'];
     State.charts.cat = new Chart(c, {
@@ -4863,6 +4878,10 @@ function renderCatChart(cats) {
 function renderDayChart(daily) {
     const c = document.getElementById('dayChart');
     if (!c) return;
+       if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded yet');
+        return;
+    }
     if (State.charts.day) State.charts.day.destroy();
     const ctx = c.getContext('2d');
     const grad = ctx.createLinearGradient(0, 0, 0, 200);
@@ -4905,6 +4924,10 @@ function renderDayChart(daily) {
 function renderPersonChart(persons) {
     const c = document.getElementById('personChart');
     if (!c) return;
+       if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded yet');
+        return;
+    }
     if (State.charts.person) State.charts.person.destroy();
     
     if (!persons || !persons.length) {
@@ -5108,6 +5131,10 @@ function drawValuesOnBars(chart) {
 function renderHourlyChart(hourly) {
     const c = document.getElementById('hourlyChart');
     if (!c) return;
+       if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded yet');
+        return;
+    }
     if (State.charts.hourly) State.charts.hourly.destroy();
     State.charts.hourly = new Chart(c, {
         type: 'bar',
@@ -5452,10 +5479,10 @@ function attachHandlers() {
         };
         attachLongPress(el, () => {
             const msgId = el.dataset.msgId;
-            const isBookmarked = State.bookmarks.includes(msgId);
+            const isBookmarked = State.bookmarks.messages?.includes(msgId);
             showContextMenu(el, [
                 { icon: '📖', label: 'مشاهده کامل', action: () => openMessageModal(State.allMessages.find(x => x._id === msgId)) },
-                { icon: isBookmarked ? '☆' : '⭐', label: isBookmarked ? 'حذف نشان' : 'نشان کردن', action: () => toggleBookmark(msgId) },
+                { icon: isBookmarked ? '☆' : '⭐', label: isBookmarked ? 'حذف نشان' : 'نشان کردن', action: () => toggleBookmark('messages', msgId) },
                 { icon: '📋', label: 'کپی متن', action: () => copyToClipboard(State.allMessages.find(x => x._id === msgId)?.text || '') },
                 { icon: '📤', label: 'اشتراک‌گذاری', action: () => shareContent(State.allMessages.find(x => x._id === msgId)?.text || '') },
             ]);
