@@ -845,6 +845,8 @@ body::after {
     margin-bottom: 14px;
     color: var(--fg);
     padding-right: 4px;
+   direction: ltr;
+    text-align: right;
 }
 .hero h1 .word { display: inline-block; }
 .hero h1 .word .ltr {
@@ -4490,10 +4492,10 @@ function renderAll(data) {
         ${infoRow('👥', 'مقامات', toFa(data.persons.length))}
     `;
 
-const filteredCategories = filteredCategories.filter(c => 
+const filteredCategories = data.categories.filter(c => 
     !c.name.includes('برق') && !c.name.includes('انرژی') && !c.name.includes('نیروگاه')
 );
-    renderCatChart(data.categories);
+    renderCatChart(filteredCategories);
     renderDayChart(data.daily);
     renderPersonChart(data.persons);
     renderHourlyChart(data.hourly);
