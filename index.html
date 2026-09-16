@@ -655,7 +655,9 @@ body::after {
 }
 .top-btn:active::before { opacity: 1; }
 .top-btn.spinning > span { display: inline-block; animation: spin calc(0.8s * var(--speed)) var(--easing); }
-
+.top-btn[type="button"] {
+    overflow: visible;
+}
 /* Export menu */
 .export-menu {
     position: absolute;
@@ -3268,15 +3270,15 @@ body::after {
         <div class="top-actions">
             <button class="top-btn" id="themeBtn" title="پوسته">🎨</button>
             <button class="top-btn" id="searchBtn" title="جستجو (Ctrl+K)">🔍</button>
-            <button class="top-btn" id="exportBtn" title="خروجی">
-                📥
-                <div class="export-menu" id="exportMenu">
-                    <div class="export-menu-item" data-export="csv">📊 خروجی CSV</div>
-                    <div class="export-menu-item" data-export="json">🧾 خروجی JSON</div>
-                    <div class="export-menu-item" data-export="print">🖨 چاپ / PDF</div>
-                    <div class="export-menu-item" data-export="share">📤 اشتراک‌گذاری</div>
-                </div>
-            </button>
+            <div style="position:relative;">
+    <button class="top-btn" id="exportBtn" title="خروجی" type="button">📥</button>
+    <div class="export-menu" id="exportMenu">
+        <div class="export-menu-item" data-export="csv">📊 خروجی CSV</div>
+        <div class="export-menu-item" data-export="json">🧾 خروجی JSON</div>
+        <div class="export-menu-item" data-export="print">🖨 چاپ / PDF</div>
+        <div class="export-menu-item" data-export="share">📤 اشتراک‌گذاری</div>
+    </div>
+</div>
             <button class="top-btn" id="refreshBtn" title="بروزرسانی">🔄</button>
         </div>
     </div>
@@ -5370,7 +5372,9 @@ datePicker.onclick = (e) => { if (e.target === datePicker) closeDatePicker(); };
    ═══════════════════════════════════════════════════════════════════ */
 document.getElementById('exportBtn').onclick = (e) => {
     e.stopPropagation();
-    document.getElementById('exportMenu').classList.toggle('active');
+    e.preventDefault();
+    const menu = document.getElementById('exportMenu');
+    menu.classList.toggle('active');
     Haptic.impact('light');
 };
 document.addEventListener('click', (e) => {
