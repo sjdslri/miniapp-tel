@@ -1,57 +1,61 @@
 """
-Monitor API v4 — نسخه جدید
+Monitor API v5 — نسخه نهایی با HEAD endpoints
 """
-print(">>> MAIN.PY LOADED — v4 <<<")
-
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from datetime import datetime, timedelta
 from collections import Counter
 
-app = FastAPI(title="Monitor API v4")
+app = FastAPI(title="Monitor API v5")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-print(f">>> SUPABASE_URL set: {bool(SUPABASE_URL)}")
-print(f">>> SUPABASE_KEY set: {bool(SUPABASE_KEY)}")
-
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("SUPABASE_URL and SUPABASE_KEY not set")
 
 from supabase import create_client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-print(">>> Supabase client created OK")
 
+
+# ═══════════════════════════════════════════════════════════
+# HEAD endpoints (برای UptimeRobot)
+# ═══════════════════════════════════════════════════════════
 @app.head("/")
-def root_head():
+def head_root():
     return {}
 
 
+@app.head("/health")
+def head_health():
+    return {}
+
+
+@app.head("/api/dashboard")
+def head_dashboard():
+    return {}
+
+
+# ═══════════════════════════════════════════════════════════
+# GET endpoints (اصلی)
+# ═══════════════════════════════════════════════════════════
 @app.get("/")
 def root():
-    return {"status": "ok", "message": "Monitor API v4", "backend": "supabase", "version": 4}
-
-@app.get("/health")
-def root_head():
-    return {}
+    return {"status": "ok", "message": "Monitor API v5", "backend": "supabase", "version": 5}
 
 
 @app.get("/health")
 def health():
-    return {"status": "healthy", "version": 4}
-
-@app.get("/api/dashboard")
-def root_head():
-    return {}
+    return {"status": "healthy", "version": 5}
 
 
 @app.get("/api/dashboard")
@@ -78,7 +82,7 @@ def dashboard(from_date: str = Query(None), to_date: str = Query(None)):
             return {
                 "total": 0, "water": 0, "project": 0, "energy": 0,
                 "channelsCount": 0, "personsCount": 0,
-                "daily": [], "hourly": [0]*24,
+                "daily": [], "hourly": [0] * 24,
                 "categories": [], "channels": [], "persons": [],
                 "range": {"from": from_date, "to": to_date}
             }
