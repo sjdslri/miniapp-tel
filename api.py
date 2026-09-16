@@ -26,6 +26,53 @@ from supabase import create_client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
+def fetch_all_matches(client, start: str, end: str):
+    """واکشی همه ردیف‌ها با pagination (دور زدن محدودیت ۱۰۰۰ تایی Supabase)"""
+    # ۱) گرفتن تعداد کل با count
+    try:
+        count_res = (
+            client.table("keyword_matches")
+            .select("id", count="exact")
+            .gte("message_date", start)
+            .lte("message_date", end)
+            .limit(0)
+            .execute()
+        )
+        total_count = count_res.count or 0
+    except Exception as e:
+        print(f"[fetch_all_matches] count error: {e}")
+        total_count = 0
+
+    # ۲) واکشی با pagination
+    all_rows = []
+    page_size = 1000
+    offset = 0
+    while offset < total_count or total_count == 0:
+        try:
+            res = (
+                client.table("keyword_matches")
+                .select("*")
+                .gte("message_date", start)
+                .lte("message_date", end)
+                .order("message_date", desc=True)
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+        except Exception as e:
+            print(f"[fetch_all_matches] fetch error at offset {offset}: {e}")
+            break
+        batch = res.data or []
+        all_rows.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
+        if total_count == 0:
+            break
+    return all_rows
+
+
+
+
 @app.get("/")
 def root():
     return {"status": "ok", "message": "Monitor API v3", "backend": "supabase"}
@@ -50,13 +97,7 @@ def dashboard(
         start = f"{from_date} 00:00:00"
         end = f"{to_date} 23:59:59"
 
-        result = supabase.table("keyword_matches") \
-            .select("*") \
-            .gte("message_date", start) \
-            .lte("message_date", end) \
-            .order("message_date", desc=True) \
-            .execute()
-        rows = result.data or []
+        rows = fetch_all_matches(supabase, start, end)
 
         total = len(rows)
         if total == 0:
