@@ -3080,12 +3080,14 @@ body::after {
     text-overflow: ellipsis;
 }
 .keyword-chip {
-    justify-content: center;
+    justify-content: space-between;
     text-align: center;
     font-size: 11.5px;
     font-weight: 700;
     color: var(--fg);
-    padding: 10px 12px;
+    padding: 10px 38px 10px 12px;
+    cursor: default;
+    position: relative;
 }
 .keyword-chip:active {
     transform: scale(0.94);
@@ -3119,6 +3121,187 @@ body::after {
     color: var(--muted);
     font-weight: 700;
     letter-spacing: 0.5px;
+}
+   /* ═══════════════════════════════════════════════════════════
+   SECTION 42.7 — PANEL HINTS + STAR BUTTONS
+   ═══════════════════════════════════════════════════════════ */
+.panel-hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.75;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    background: var(--surface-2);
+    border-radius: var(--r-sm);
+    border-right: 3px solid var(--accent);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.panel-hint .hint-icon {
+    flex-shrink: 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Star button */
+.star-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--surface-3);
+    border: 1px solid var(--border-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.3s var(--easing-bounce);
+    color: var(--muted-2);
+    margin-left: 4px;
+    line-height: 1;
+    padding: 0;
+}
+.star-btn:active {
+    transform: scale(0.85);
+    background: var(--accent-soft);
+}
+.star-btn.active {
+    color: #FFD27A;
+    background: rgba(255, 210, 122, 0.12);
+    border-color: rgba(255, 210, 122, 0.3);
+    box-shadow: 0 0 12px rgba(255, 210, 122, 0.3);
+}
+.star-btn.active::before {
+    content: '★';
+    animation: starPop 0.5s var(--easing-bounce);
+}
+.star-btn:not(.active)::before {
+    content: '☆';
+}
+.star-btn::before {
+    display: inline-block;
+    font-size: 16px;
+    line-height: 1;
+}
+@keyframes starPop {
+    0% { transform: scale(0.5) rotate(-45deg); }
+    50% { transform: scale(1.3) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Bookmark group header */
+.bm-group-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 18px 0 10px;
+    padding: 8px 12px;
+    background: var(--accent-soft);
+    border-radius: var(--r-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: -0.2px;
+}
+.bm-group-title:first-child { margin-top: 0; }
+.bm-group-count {
+    font-size: 10.5px;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 800;
+}
+
+/* Bookmark item */
+.bm-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--r-md);
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+    margin-bottom: 8px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s var(--easing);
+}
+.bm-item:active {
+    transform: scale(0.98);
+    background: var(--surface-3);
+}
+.bm-item::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #FFD27A, #C9A96E);
+    border-radius: 3px 0 0 3px;
+}
+.bm-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 12px;
+    color: #fff;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+.bm-avatar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.3), transparent 60%);
+}
+.bm-body {
+    flex: 1;
+    min-width: 0;
+}
+.bm-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.bm-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.bm-remove {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--rose);
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+.bm-remove:active {
+    opacity: 1;
+    background: rgba(225, 29, 72, 0.12);
 }
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 43 — PRINT
@@ -3406,6 +3589,10 @@ body::after {
         <div class="panel reveal">
             <div class="panel-head">
                 <div class="panel-title">روند روزانه</div>
+                           <div class="panel-hint">
+                <span class="hint-icon">💡</span>
+                <span>تعداد پیام‌های مچ‌شده در هر روز. پیک‌ها نشان‌دهنده روزهای پرخبر است.</span>
+            </div>
             </div>
             <div class="chart-wrap short"><canvas id="dayChart"></canvas></div>
         </div>
@@ -3483,6 +3670,10 @@ body::after {
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">تاپ کلیدواژه‌ها</div>
+                           <div class="panel-hint">
+                <span class="hint-icon">💡</span>
+                <span>پرکاربردترین کلیدواژه‌های شناسایی‌شده در بازه انتخابی. نوار پررنگ‌تر = تکرار بیشتر.</span>
+            </div>
             </div>
             <div class="mini-bars" id="topKeywords"></div>
         </div>
@@ -3505,6 +3696,10 @@ body::after {
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">تقویم فعالیت</div>
+                           <div class="panel-hint">
+                <span class="hint-icon">💡</span>
+                <span>هر مربع یک روز است. رنگ پررنگ‌تر یعنی اون روز خبر بیشتری مچ شده. برای دیدن جزئیات روی مربع بزن.</span>
+            </div>
                 <span class="panel-action" id="heatmapTotal">۰</span>
             </div>
             <div class="heatmap" id="heatmapGrid"></div>
@@ -3531,6 +3726,10 @@ body::after {
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">خط زمانی رویدادها</div>
+                           <div class="panel-hint">
+                <span class="hint-icon">💡</span>
+                <span>آخرین رویدادها به ترتیب زمان. جدیدترین‌ها بالا. هر آیتم شامل کانال، تاریخ و خلاصه پیام.</span>
+            </div>
             </div>
             <div class="timeline" id="timelineList"></div>
         </div>
@@ -3541,6 +3740,10 @@ body::after {
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">ابر کلمات کلیدی</div>
+                           <div class="panel-hint">
+                <span class="hint-icon">💡</span>
+                <span>پرتکرارترین کلمات کلیدی در پیام‌ها. اندازه هر کلمه نشان‌دهنده تکرار آن است. برای جستجو روی هر کلمه بزن.</span>
+            </div>
             </div>
             <div class="word-cloud" id="wordCloud"></div>
         </div>
@@ -3551,6 +3754,10 @@ body::after {
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">مرکز هشدارها</div>
+                           <div class="panel-hint">
+                <span class="hint-icon">💡</span>
+                <span>اطلاعیه‌های خودکار سیستم. مثلاً: افزایش ناگهانی پیام‌ها، تغییر روند، یا رویدادهای مهم.</span>
+            </div>
                 <button class="panel-action" onclick="showToast('✓ همه خوانده‌شده')">همه خوانده</button>
             </div>
             <div id="alertsList"></div>
@@ -3895,7 +4102,7 @@ const State = {
     theme: localStorage.getItem('theme') || 'blue',
     speed: localStorage.getItem('speed') || 'normal',
     fontSize: localStorage.getItem('fontSize') || 'md',
-    bookmarks: JSON.parse(localStorage.getItem('bookmarks') || '[]'),
+    bookmarks: JSON.parse(localStorage.getItem('bookmarks_v2') || '{"messages":[],"channels":[],"persons":[],"keywords":[]}'),
     alerts: [],
     searchHistory: JSON.parse(localStorage.getItem('searchHistory') || '[]'),
     allMessages: [],
@@ -4415,15 +4622,18 @@ function renderKPI(data) {
 function channelRowHTML(ch) {
     const initials = (ch.name || ch.username).slice(0, 2);
     const grad = avatarGradient(ch.username || ch.name);
-    const notif = Math.random() > 0.75 ? '<span class="notif-dot"></span>' : '';
+    const isStarred = isBookmarked('channels', ch.username);
     return `<div class="row" data-channel="${escapeHtml(ch.username)}">
         <div class="row-avatar" style="background:${grad}">${escapeHtml(initials)}</div>
         <div class="row-body">
             <div class="row-title">${escapeHtml(ch.name)}</div>
-            <div class="row-sub">@${escapeHtml(ch.username)} ${notif}</div>
+            <div class="row-sub">@${escapeHtml(ch.username)}</div>
         </div>
         <div class="row-badge">${toFa(ch.count)}</div>
-        <div class="row-arrow">‹</div>
+        <button class="star-btn ${isStarred ? 'active' : ''}" 
+                data-star-channel="${escapeHtml(ch.username)}"
+                onclick="event.stopPropagation(); toggleBookmark('channels', '${escapeHtml(ch.username)}')"
+                title="نشان کردن"></button>
     </div>`;
 }
 
@@ -4443,6 +4653,7 @@ function messageRowHTML(m) {
 
 function personRowHTML(p, i) {
     const grad = avatarGradient(p.name);
+    const isStarred = isBookmarked('persons', p.name);
     return `<div class="row" data-person-idx="${i}">
         <div class="row-avatar" style="background:${grad}">${escapeHtml(p.name.slice(0, 2))}</div>
         <div class="row-body">
@@ -4450,10 +4661,12 @@ function personRowHTML(p, i) {
             <div class="row-sub">${escapeHtml(p.role || '')}</div>
         </div>
         <div class="row-badge">${toFa(p.count)}</div>
-        <div class="row-arrow">‹</div>
+        <button class="star-btn ${isStarred ? 'active' : ''}" 
+                data-star-person="${escapeHtml(p.name)}"
+                onclick="event.stopPropagation(); toggleBookmark('persons', '${escapeHtml(p.name)}')"
+                title="نشان کردن"></button>
     </div>`;
 }
-
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 64 — SORT
    ═══════════════════════════════════════════════════════════════════ */
@@ -5011,43 +5224,157 @@ function renderAlerts(data) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SECTION 71 — BOOKMARKS
+   SECTION 71 — BOOKMARKS (نسخه گسترده)
    ═══════════════════════════════════════════════════════════════════ */
-function toggleBookmark(msgId) {
-    const idx = State.bookmarks.indexOf(msgId);
+function saveBookmarks() {
+    localStorage.setItem('bookmarks_v2', JSON.stringify(State.bookmarks));
+}
+
+function isBookmarked(type, id) {
+    return (State.bookmarks[type] || []).includes(id);
+}
+
+function toggleBookmark(type, id, data = null) {
+    if (!State.bookmarks[type]) State.bookmarks[type] = [];
+    const arr = State.bookmarks[type];
+    const idx = arr.indexOf(id);
+    
     if (idx >= 0) {
-        State.bookmarks.splice(idx, 1);
+        arr.splice(idx, 1);
         showToast('⭐ از نشان‌شده‌ها حذف شد', 'info');
     } else {
-        State.bookmarks.push(msgId);
+        arr.push(id);
         showToast('⭐ به نشان‌شده‌ها اضافه شد', 'success');
-        launchConfetti(15);
+        launchConfetti(10);
     }
-    localStorage.setItem('bookmarks', JSON.stringify(State.bookmarks));
+    
+    saveBookmarks();
     renderBookmarks();
+    refreshStarButtons();
     Haptic.notify('success');
+}
+
+function refreshStarButtons() {
+    // کانال‌ها
+    document.querySelectorAll('[data-star-channel]').forEach(btn => {
+        const u = btn.dataset.starChannel;
+        btn.classList.toggle('active', isBookmarked('channels', u));
+    });
+    // مقامات
+    document.querySelectorAll('[data-star-person]').forEach(btn => {
+        const n = btn.dataset.starPerson;
+        btn.classList.toggle('active', isBookmarked('persons', n));
+    });
+    // کلیدواژه
+    document.querySelectorAll('[data-star-keyword]').forEach(btn => {
+        const k = btn.dataset.starKeyword;
+        btn.classList.toggle('active', isBookmarked('keywords', k));
+    });
+    // پیام
+    document.querySelectorAll('[data-star-msg]').forEach(btn => {
+        const id = btn.dataset.starMsg;
+        btn.classList.toggle('active', isBookmarked('messages', id));
+    });
 }
 
 function renderBookmarks() {
     const wrap = document.getElementById('bookmarksList');
     if (!wrap) return;
-    document.getElementById('bookmarksCount').textContent = toFa(State.bookmarks.length);
-    if (!State.bookmarks.length) {
-        wrap.innerHTML = '<div class="empty"><div class="empty-icon">⭐</div><div class="empty-title">هنوز چیزی نشان نکردی</div><div class="empty-text">روی پیام‌ها نگه دار و «نشان کردن» را بزن</div></div>';
+    
+    const total = 
+        (State.bookmarks.messages?.length || 0) +
+        (State.bookmarks.channels?.length || 0) +
+        (State.bookmarks.persons?.length || 0) +
+        (State.bookmarks.keywords?.length || 0);
+    
+    document.getElementById('bookmarksCount').textContent = toFa(total) + ' نشان';
+    
+    if (!total) {
+        wrap.innerHTML = '<div class="empty"><div class="empty-icon">⭐</div><div class="empty-title">هنوز چیزی نشان نکردی</div><div class="empty-text">روی ستاره کنار کانال، مقام یا کلیدواژه بزن</div></div>';
         return;
     }
-    const msgs = State.allMessages.filter(m => State.bookmarks.includes(m._id));
-    wrap.innerHTML = msgs.map(m => `
-        <div class="bookmark-row">
-            <span class="bookmark-star">⭐</span>
-            <div style="flex:1;min-width:0;">
-                <div class="row-sub" style="margin-bottom:4px;">📡 ${escapeHtml(m.channelName || '')} · ${escapeHtml(m.date || '')}</div>
-                <div style="font-size:12.5px;line-height:1.7;color:var(--fg-soft);">${escapeHtml((m.text || '').slice(0, 120))}${m.text?.length > 120 ? '…' : ''}</div>
-            </div>
-        </div>
-    `).join('');
+    
+    let html = '';
+    
+    // ── کانال‌ها ──
+    if (State.bookmarks.channels?.length) {
+        html += `<div class="bm-group-title">📡 کانال‌های نشان‌شده <span class="bm-group-count">${toFa(State.bookmarks.channels.length)}</span></div>`;
+        State.bookmarks.channels.forEach(u => {
+            const ch = (State.data?.channels || []).find(c => c.username === u);
+            const name = ch?.name || u;
+            const grad = avatarGradient(u);
+            html += `
+                <div class="bm-item" onclick="openChannelModal('${escapeHtml(u)}')">
+                    <div class="bm-avatar" style="background:${grad}">${escapeHtml(name.slice(0, 2))}</div>
+                    <div class="bm-body">
+                        <div class="bm-title">${escapeHtml(name)}</div>
+                        <div class="bm-sub">@${escapeHtml(u)}</div>
+                    </div>
+                    <button class="bm-remove" onclick="event.stopPropagation(); toggleBookmark('channels', '${escapeHtml(u)}')">✕</button>
+                </div>`;
+        });
+    }
+    
+    // ── مقامات ──
+    if (State.bookmarks.persons?.length) {
+        html += `<div class="bm-group-title">👤 مقامات نشان‌شده <span class="bm-group-count">${toFa(State.bookmarks.persons.length)}</span></div>`;
+        State.bookmarks.persons.forEach(name => {
+            const p = (State.persons || []).find(x => x.name === name);
+            const role = p?.role || '';
+            const grad = avatarGradient(name);
+            html += `
+                <div class="bm-item" onclick="openPersonByName('${escapeHtml(name)}')">
+                    <div class="bm-avatar" style="background:${grad}">${escapeHtml(name.slice(0, 2))}</div>
+                    <div class="bm-body">
+                        <div class="bm-title">${escapeHtml(name)}</div>
+                        <div class="bm-sub">${escapeHtml(role)}</div>
+                    </div>
+                    <button class="bm-remove" onclick="event.stopPropagation(); toggleBookmark('persons', '${escapeHtml(name)}')">✕</button>
+                </div>`;
+        });
+    }
+    
+    // ── کلیدواژه‌ها ──
+    if (State.bookmarks.keywords?.length) {
+        html += `<div class="bm-group-title">🔑 کلیدواژه‌های نشان‌شده <span class="bm-group-count">${toFa(State.bookmarks.keywords.length)}</span></div>`;
+        State.bookmarks.keywords.forEach(k => {
+            html += `
+                <div class="bm-item" onclick="searchKeyword('${escapeHtml(k)}')">
+                    <div class="bm-avatar" style="background:linear-gradient(135deg,#C9A96E,#A88B4F)">🔑</div>
+                    <div class="bm-body">
+                        <div class="bm-title">${escapeHtml(k)}</div>
+                        <div class="bm-sub">کلیدواژه پایش</div>
+                    </div>
+                    <button class="bm-remove" onclick="event.stopPropagation(); toggleBookmark('keywords', '${escapeHtml(k)}')">✕</button>
+                </div>`;
+        });
+    }
+    
+    // ── پیام‌ها ──
+    if (State.bookmarks.messages?.length) {
+        html += `<div class="bm-group-title">💬 پیام‌های نشان‌شده <span class="bm-group-count">${toFa(State.bookmarks.messages.length)}</span></div>`;
+        const msgs = (State.allMessages || []).filter(m => State.bookmarks.messages.includes(m._id));
+        msgs.forEach(m => {
+            html += `
+                <div class="bm-item" onclick="openMessageModal(State.allMessages.find(x => x._id === '${m._id}'))">
+                    <div class="bm-avatar" style="background:${avatarGradient(m.channelName || '')}">📡</div>
+                    <div class="bm-body">
+                        <div class="bm-title">${escapeHtml(m.channelName || 'پیام')}</div>
+                        <div class="bm-sub">${escapeHtml((m.text || '').slice(0, 100))}${m.text?.length > 100 ? '…' : ''}</div>
+                    </div>
+                    <button class="bm-remove" onclick="event.stopPropagation(); toggleBookmark('messages', '${m._id}')">✕</button>
+                </div>`;
+        });
+    }
+    
+    wrap.innerHTML = html;
 }
 
+function openPersonByName(name) {
+    const idx = (State.persons || []).findIndex(p => p.name === name);
+    if (idx >= 0) openPersonModal(idx);
+    else showToast('مقام مورد نظر پیدا نشد', 'info');
+}
 /* ═══════════════════════════════════════════════════════════════════
    SECTION 72 — HANDLERS
    ═══════════════════════════════════════════════════════════════════ */
@@ -5135,13 +5462,22 @@ function openChannelModal(username) {
     const ch = State.data.channels.find(c => c.username === username);
     if (!ch) return;
     const grad = avatarGradient(username);
+       const isStarred = isBookmarked('channels', username);
     sheetHeader.innerHTML = `
         <button class="sheet-close" onclick="closeModal()">✕</button>
         <div class="sheet-header-top">
             <div class="sheet-avatar" style="background:${grad}">${escapeHtml((ch.name || username).slice(0, 2))}</div>
             <div class="sheet-head-body">
                 <div class="sheet-title">${escapeHtml(ch.name)}</div>
-                <div class="sheet-subtitle"><span>@${escapeHtml(username)}</span><span>•</span><span>${toFa(ch.count)} مچ</span></div>
+                                <div class="sheet-subtitle">
+                    <span>@${escapeHtml(username)}</span>
+                    <span>•</span>
+                    <span>${toFa(ch.count)} مچ</span>
+                    <button class="star-btn ${isStarred ? 'active' : ''}" 
+                            data-star-channel="${escapeHtml(username)}"
+                            onclick="toggleBookmark('channels', '${escapeHtml(username)}')"
+                            style="margin-right:auto;margin-left:0;"></button>
+                </div>
             </div>
         </div>`;
     const msgs = ch.messages || [];
@@ -5161,6 +5497,8 @@ function openChannelModal(username) {
 function openPersonModal(idx) {
     const p = (State.persons && State.persons[idx]) || (State.data.persons && State.data.persons[idx]);
     if (!p) return;
+    const isStarred = isBookmarked('persons', p.name);
+    if (!p) return;
     const grad = avatarGradient(p.name);
     sheetHeader.innerHTML = `
         <button class="sheet-close" onclick="closeModal()">✕</button>
@@ -5168,7 +5506,15 @@ function openPersonModal(idx) {
             <div class="sheet-avatar" style="background:${grad}">${escapeHtml(p.name.slice(0, 2))}</div>
             <div class="sheet-head-body">
                 <div class="sheet-title">${escapeHtml(p.name)}</div>
-                <div class="sheet-subtitle"><span>${escapeHtml(p.role || '')}</span><span>•</span><span>${toFa(p.count)} اشاره</span></div>
+                               <div class="sheet-subtitle">
+                    <span>${escapeHtml(p.role || '')}</span>
+                    <span>•</span>
+                    <span>${toFa(p.count)} اشاره</span>
+                    <button class="star-btn ${isStarred ? 'active' : ''}" 
+                            data-star-person="${escapeHtml(p.name)}"
+                            onclick="toggleBookmark('persons', '${escapeHtml(p.name)}')"
+                            style="margin-right:auto;margin-left:0;"></button>
+                </div>
             </div>
         </div>`;
     const mentions = p.mentions || [];
@@ -5195,10 +5541,10 @@ function openMessageModal(m) {
                 <div class="sheet-subtitle"><span>${escapeHtml(m.channel || '')}</span><span>•</span><span>${escapeHtml(m.date || '')}</span></div>
             </div>
         </div>`;
-    const isBookmarked = State.bookmarks.includes(m._id);
-    sheetBody.innerHTML = fullMessageHTML(m) + `
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
-            <button class="sheet-link" onclick="toggleBookmark('${m._id}'); closeModal();">${isBookmarked ? '☆ حذف نشان' : '⭐ نشان کردن'}</button>
+    const isStarred = isBookmarked('messages', m._id);
+   sheetBody.innerHTML = fullMessageHTML(m) + `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+        <button class="sheet-link" onclick="toggleBookmark('messages', '${m._id}'); closeModal();">${isStarred ? '☆ حذف نشان' : '⭐ نشان کردن'}</button>
             <button class="sheet-link" onclick="copyToClipboard(${JSON.stringify(m.text || '').replace(/"/g, '&quot;')})">📋 کپی</button>
             <button class="sheet-link" onclick="shareContent(${JSON.stringify(m.text || '').replace(/"/g, '&quot;')})">📤 اشتراک</button>
         </div>
@@ -5856,9 +6202,16 @@ function renderKeywords() {
         grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><div class="empty-icon">🔑</div><div class="empty-title">کلیدواژه‌ای یافت نشد</div></div>';
         return;
     }
-    grid.innerHTML = MonitoredKeywords.map(k =>
-        `<div class="keyword-chip" onclick="searchKeyword('${escapeHtml(k)}')">${escapeHtml(k)}</div>`
-    ).join('');
+   grid.innerHTML = MonitoredKeywords.map(k => {
+    const isStarred = isBookmarked('keywords', k);
+    return `<div class="keyword-chip" style="position:relative;">
+        <span onclick="searchKeyword('${escapeHtml(k)}')" style="flex:1;text-align:center;">${escapeHtml(k)}</span>
+        <button class="star-btn ${isStarred ? 'active' : ''}" 
+                data-star-keyword="${escapeHtml(k)}"
+                onclick="event.stopPropagation(); toggleBookmark('keywords', '${escapeHtml(k)}')"
+                style="position:absolute;left:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;font-size:12px;"></button>
+    </div>`;
+}).join('');
 }
 
 function searchKeyword(kw) {
