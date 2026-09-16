@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#05050A">
 <title>sjdslri | @sjdslri_bot</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<link rel="preconnect" href="https://monitor-api-o1e2.onrender.com" crossorigin>
+<link rel="dns-prefetch" href="https://monitor-api-o1e2.onrender.com">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════
@@ -3109,7 +3112,7 @@ body::after {
     border: 1px solid var(--border-1);
 }
 .kw-stat-value {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Syne', 'Vazirmatn', sans-serif;
     font-size: 24px;
     font-weight: 700;
     color: var(--accent);
@@ -4419,6 +4422,13 @@ document.addEventListener('touchend', () => {
    SECTION 60 — SAMPLE DATA
    ═══════════════════════════════════════════════════════════════════ */
 const API_URL = 'https://monitor-api-o1e2.onrender.com/api/dashboard';
+   const API_BASE = 'https://monitor-api-o1e2.onrender.com';
+const CACHE_KEY = 'dashboard_cache_v1';
+const CACHE_TTL = 5 * 60 * 1000; // ۵ دقیقه
+
+// Pre-warm: سرور رو بیدار کن (بدون انتظار)
+fetch(`${API_BASE}/health`, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
+
    const FETCH_TIMEOUT = 60000; // ۶۰ ثانیه برای cold start
 const SAMPLE_DATA = {
     total: 288, water: 254, project: 34, channelsCount: 8, personsCount: 7,
@@ -4502,31 +4512,68 @@ async function fetchData() {
         await new Promise(r => setTimeout(r, 300));
         return SAMPLE_DATA;
     }
+    
+    const [fy, fm, fd] = State.dateRange.from.split('-').map(Number);
+    const [ty, tm, td] = State.dateRange.to.split('-').map(Number);
+    const from_greg = jalaliToGregorian(fy, fm, fd);
+    const to_greg = jalaliToGregorian(ty, tm, td);
+    const cacheKey = `${CACHE_KEY}_${from_greg}_${to_greg}`;
+    
+    // ۱. اگه کش داریم، فوری نشون بده
     try {
-        const [fy, fm, fd] = State.dateRange.from.split('-').map(Number);
-        const [ty, tm, td] = State.dateRange.to.split('-').map(Number);
-        const from_greg = jalaliToGregorian(fy, fm, fd);
-        const to_greg = jalaliToGregorian(ty, tm, td);
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Date.now() - parsed.ts < CACHE_TTL) {
+                console.log('📦 Using cached data');
+                // به‌روزرسانی در پس‌زمینه
+                fetchFreshData(from_greg, to_greg, cacheKey);
+                return parsed.data;
+            }
+        }
+    } catch (e) { console.warn('Cache read failed:', e); }
+    
+    // ۲. اگه کش نداریم، با timeout برو سراغ سرور
+    return await fetchFreshData(from_greg, to_greg, cacheKey);
+}
+
+async function fetchFreshData(from_greg, to_greg, cacheKey) {
+    try {
         const url = `${API_URL}?from_date=${from_greg}&to_date=${to_greg}`;
-        
-        // Timeout برای جلوگیری از انتظار بی‌نهایت
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+        
+        // اگه بعد از ۴ ثانیه جواب نداد، پیام نشون بده
+        const slowTimer = setTimeout(() => {
+            showToast('⏳ سرور در حال بیدار شدنه...', 'info', 8000);
+        }, 4000);
+        
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
         
         const res = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
+        clearTimeout(slowTimer);
         
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         
-        // چک صحیح: اگه response خالی یا خطا بود
-        if (!data || typeof data.total !== 'number' || data.total === 0 || data.error) {
-            console.warn('API empty or invalid, using sample data');
+        if (!data || typeof data.total !== 'number' || data.error) {
             return SAMPLE_DATA;
         }
+        
+        // ذخیره در کش
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify({
+                ts: Date.now(),
+                data: data
+            }));
+        } catch (e) { console.warn('Cache write failed:', e); }
+        
         return data;
     } catch (e) {
-        console.warn('Fetch failed, using sample data:', e);
+        console.warn('Fetch failed:', e);
+        if (e.name === 'AbortError') {
+            showToast('⚠️ سرور پاسخ نداد، داده‌های نمونه نمایش داده می‌شه', 'error');
+        }
         return SAMPLE_DATA;
     }
 }
