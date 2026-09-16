@@ -4638,41 +4638,203 @@ function renderPersonChart(persons) {
     const c = document.getElementById('personChart');
     if (!c) return;
     if (State.charts.person) State.charts.person.destroy();
+    
+    if (!persons || !persons.length) {
+        State.charts.person = null;
+        const wrap = c.parentElement;
+        if (wrap) wrap.style.height = '160px';
+        return;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // ارتفاع داینامیک بر اساس تعداد نفرات
+    // ═══════════════════════════════════════════════════════════
+    const total = persons.length;
+    const barHeight = 32; // ارتفاع هر ردیف
+    const minHeight = 200;
+    const maxHeight = 1400;
+    const calculatedHeight = Math.min(maxHeight, Math.max(minHeight, total * barHeight + 60));
+    
+    const wrap = c.parentElement;
+    if (wrap) wrap.style.height = calculatedHeight + 'px';
+
+    // ═══════════════════════════════════════════════════════════
+    // پالت رنگی - تناوب آبی و فیروزه‌ای
+    // ═══════════════════════════════════════════════════════════
+    const paletteA = ['#5BAAFF', '#2B6FDB']; // آبی
+    const paletteB = ['#22D3EE', '#0891B2']; // فیروزه‌ای
+    
+    const gradients = persons.map((_, i) => {
+        const palette = i % 2 === 0 ? paletteA : paletteB;
+        return (ctx) => {
+            const { ctx: cx, chartArea } = ctx.chart;
+            if (!chartArea) return palette[0];
+            const g = cx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+            g.addColorStop(0, palette[1]);
+            g.addColorStop(1, palette[0]);
+            return g;
+        };
+    });
+
+    // برچسب‌ها با مدال برای سه نفر اول
+    const labels = persons.map((p, i) => {
+        const medal = i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : '';
+        const num = i < 3 ? '' : `${i + 1}. `;
+        return medal + num + p.name;
+    });
+
+    const values = persons.map(p => p.count);
+
     State.charts.person = new Chart(c, {
         type: 'bar',
         data: {
-            labels: persons.map(p => p.name),
+            labels: labels,
             datasets: [{
-                data: persons.map(p => p.count),
-                backgroundColor: (ctx) => {
-                    const { ctx: cx, chartArea } = ctx.chart;
-                    if (!chartArea) return 'rgba(201,169,110,0.85)';
-                    const g = cx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-                    g.addColorStop(0, 'rgba(183,148,246,0.9)');
-                    g.addColorStop(1, 'rgba(201,169,110,0.9)');
-                    return g;
+                data: values,
+                backgroundColor: gradients,
+                borderColor: (ctx) => {
+                    const i = ctx.dataIndex;
+                    if (i === 0) return '#FFD27A';  // طلایی
+                    if (i === 1) return '#C0C0C0';  // نقره‌ای
+                    if (i === 2) return '#CD7F32';  // برنزی
+                    return 'rgba(255,255,255,0.08)';
                 },
-                borderRadius: 10, borderSkipped: false, barThickness: 20
+                borderWidth: (ctx) => ctx.dataIndex < 3 ? 2 : 1,
+                borderRadius: 8,
+                borderSkipped: false,
+                barThickness: total > 20 ? 18 : total > 12 ? 22 : 26,
             }]
         },
         options: {
-            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-            animation: { duration: 1600, easing: 'easeOutQuart', delay: ctx => ctx.dataIndex * 90 },
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1400,
+                easing: 'easeOutQuart',
+                delay: ctx => Math.min(ctx.dataIndex * 40, 600),
+                onComplete: () => {
+                    drawValuesOnBars(State.charts.person);
+                }
+            },
+            layout: {
+                padding: {
+                    right: 50,   // فضای کافی برای عدد
+                    left: 4,
+                    top: 4,
+                    bottom: 4
+                }
+            },
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    rtl: true, backgroundColor: '#16161F', titleColor: '#C9A96E', bodyColor: '#E8E8F0',
-                    borderColor: 'rgba(201,169,110,0.3)', borderWidth: 1,
-                    padding: 12, cornerRadius: 12, displayColors: false,
-                    titleFont: { family: 'Vazirmatn', size: 12 }, bodyFont: { family: 'Vazirmatn', size: 12 }
+                    rtl: true,
+                    textDirection: 'rtl',
+                    backgroundColor: '#16161F',
+                    titleColor: '#5BAAFF',
+                    bodyColor: '#E8E8F0',
+                    borderColor: 'rgba(91,170,255,0.3)',
+                    borderWidth: 1,
+                    padding: 14,
+                    cornerRadius: 14,
+                    displayColors: false,
+                    titleFont: { family: 'Vazirmatn', size: 13, weight: '700' },
+                    bodyFont: { family: 'Vazirmatn', size: 12 },
+                    callbacks: {
+                        title: (items) => {
+                            return persons[items[0].dataIndex].name;
+                        },
+                        label: (ctx) => {
+                            const i = ctx.dataIndex;
+                            return [
+                                `📊 ${ctx.parsed.x} اشاره`,
+                                `🎯 ${persons[i].role || 'بدون سمت'}`
+                            ];
+                        }
+                    }
                 }
             },
             scales: {
-                x: { beginAtZero: true, ticks: { color: '#707085', font: { family: 'Vazirmatn', size: 10.5 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                y: { ticks: { color: '#E8E8F0', font: { family: 'Vazirmatn', size: 10.5, weight: '700' } }, grid: { display: false } }
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#707085',
+                        font: { family: 'Vazirmatn', size: 11 },
+                        stepSize: 1,
+                        precision: 0
+                    },
+                    grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false }
+                },
+                y: {
+                    ticks: {
+                        color: '#E8E8F0',
+                        font: { family: 'Vazirmatn', size: 11.5, weight: '600' },
+                        padding: 8,
+                        autoSkip: false     // ✅ همه رو نشون بده
+                    },
+                    grid: { display: false }
+                }
             }
         }
     });
+}
+
+// ═══════════════════════════════════════════════════════════
+// رسم اعداد روی میله‌ها
+// ═══════════════════════════════════════════════════════════
+function drawValuesOnBars(chart) {
+    if (!chart || !chart.ctx) return;
+    const ctx = chart.ctx;
+    const meta = chart.getDatasetMeta(0);
+    
+    ctx.save();
+    ctx.font = 'bold 12px Vazirmatn, Tahoma';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    
+    meta.data.forEach((bar, i) => {
+        const value = chart.data.datasets[0].data[i];
+        if (!value) return;
+        
+        const x = bar.x;
+        const y = bar.y;
+        const valueText = String(value).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+        
+        // اندازه متن
+        const textWidth = ctx.measureText(valueText).width;
+        const padding = 7;
+        const boxWidth = textWidth + padding * 2;
+        const boxHeight = 20;
+        
+        // جایگاه: داخل میله یا بیرون اگر میله کوچک باشه
+        const chartWidth = chart.chartArea.right - chart.chartArea.left;
+        const barWidth = bar.x - chart.chartArea.left;
+        const isSmallBar = barWidth < 50;
+        
+        let boxX;
+        if (isSmallBar) {
+            // بیرون میله، سمت راست
+            boxX = bar.x + boxWidth / 2 + 6;
+        } else {
+            // داخل میله، سمت راست (نزدیک انتهای میله)
+            boxX = bar.x - boxWidth / 2 - 6;
+        }
+        
+        // رسم پس‌زمینه کادر عدد
+        ctx.fillStyle = isSmallBar ? 'rgba(22, 22, 31, 0.95)' : 'rgba(255, 255, 255, 0.15)';
+        ctx.beginPath();
+        const r = 8;
+        const bx = boxX - boxWidth / 2;
+        const by = y - boxHeight / 2;
+        ctx.roundRect(bx, by, boxWidth, boxHeight, r);
+        ctx.fill();
+        
+        // رنگ متن: سفید اگه داخل میله، آبی اگه بیرون
+        ctx.fillStyle = isSmallBar ? '#5BAAFF' : '#FFFFFF';
+        ctx.fillText(valueText, boxX, y);
+    });
+    
+    ctx.restore();
 }
 
 function renderHourlyChart(hourly) {
