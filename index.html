@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#05050A">
 <title>sjdslri | @sjdslri_bot</title>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" ></script>
 <link rel="preconnect" href="https://monitor-api-o1e2.onrender.com" crossorigin>
 <link rel="dns-prefetch" href="https://monitor-api-o1e2.onrender.com">
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -6337,15 +6337,14 @@ setTimeout(() => {
    ═══════════════════════════════════════════════════════════════════ */
 (async () => {
     try {
-        document.getElementById('dateRangeLabel').textContent = State.dateRange.from;
-        await waitForChart();   
+        document.getElementById('dateRangeLabel').textContent = State.dateRange.from; 
         const t = document.getElementById('autoRefreshToggle');
         if (t) t.classList.toggle('on', State.autoRefresh);
 
                const data = await fetchData();
         renderAll(data);
-        loadMonitoredData();    
-        loadPersonalities();       
+        await loadMonitoredData();
+        await loadPersonalities();     
         if (State.autoRefresh) startAutoRefresh();
 
         setTimeout(() => {
