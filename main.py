@@ -56,6 +56,30 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy", "version": 5}
+# ═══════════════════════════════════════════════════════════
+# Simple in-memory cache (5 minutes)
+# ═══════════════════════════════════════════════════════════
+import time
+_dashboard_cache = {}
+CACHE_TTL = 300  # 5 minutes
+
+
+def _get_cached(from_date, to_date):
+    key = f"{from_date}:{to_date}"
+    entry = _dashboard_cache.get(key)
+    if entry and (time.time() - entry["ts"]) < CACHE_TTL:
+        return entry["data"]
+    return None
+
+
+def _set_cached(from_date, to_date, data):
+    key = f"{from_date}:{to_date}"
+    _dashboard_cache[key] = {"ts": time.time(), "data": data}
+    # Keep cache small (max 20 entries)
+    if len(_dashboard_cache) > 20:
+        oldest = min(_dashboard_cache, key=lambda k: _dashboard_cache[k]["ts"])
+        del _dashboard_cache[oldest]
+
 
 
 @app.get("/api/dashboard")
@@ -65,6 +89,11 @@ def dashboard(from_date: str = Query(None), to_date: str = Query(None)):
             from_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
         if not to_date:
             to_date = datetime.now().strftime("%Y-%m-%d")
+              # Check cache
+        cached = _get_cached(from_date, to_date)
+        if cached is not None:
+            return cached
+
 
         start = f"{from_date} 00:00:00"
         end = f"{to_date} 23:59:59"
@@ -136,7 +165,7 @@ def dashboard(from_date: str = Query(None), to_date: str = Query(None)):
                     kw_counter[k.strip()] += 1
         categories = [{"name": k, "count": v} for k, v in kw_counter.most_common(10)]
 
-        return {
+        result_data = {
             "total": total,
             "water": water_count,
             "energy": project_count,
@@ -150,5 +179,9 @@ def dashboard(from_date: str = Query(None), to_date: str = Query(None)):
             "persons": [],
             "range": {"from": from_date, "to": to_date}
         }
+        
+        _set_cached(from_date, to_date, result_data)
+        return result_data
+        
     except Exception as e:
         return {"error": str(e), "total": 0}
